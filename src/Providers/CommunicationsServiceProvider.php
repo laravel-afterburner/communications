@@ -15,6 +15,7 @@ use Afterburner\Communications\Models\DiscussionThread;
 use Afterburner\Communications\Policies\CommunicationLogPolicy;
 use Afterburner\Communications\Policies\DiscussionThreadPolicy;
 use Afterburner\Communications\Services\CommunicationLogService;
+use Afterburner\Playbook\Support\Playbook;
 use App\Models\Team;
 use App\Support\Navigation;
 use Illuminate\Notifications\Events\NotificationSent;
@@ -62,6 +63,7 @@ class CommunicationsServiceProvider extends ServiceProvider
         $this->registerGates();
         $this->registerAuditSkipRoutes();
         $this->registerNavigation();
+        $this->registerPlaybook();
         $this->registerEventListeners();
         $this->registerPackageSeeder();
 
@@ -158,6 +160,22 @@ class CommunicationsServiceProvider extends ServiceProvider
                     || request()->routeIs('teams.communication-log.*'),
             ]);
         }
+    }
+
+    protected function registerPlaybook(): void
+    {
+        if (! class_exists(Playbook::class)) {
+            return;
+        }
+
+        Playbook::register([
+            'key' => 'communications',
+            'label' => 'Communications',
+            'order' => 30,
+            'path' => __DIR__.'/../../playbook',
+            'enabled' => fn () => config('afterburner-communications.enabled', true),
+            'permission' => fn ($user) => $user?->currentTeam !== null,
+        ]);
     }
 
     protected function registerEventListeners(): void
