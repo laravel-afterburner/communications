@@ -31,6 +31,13 @@ class AnnouncementManager extends Component
     public $team;
 
     /**
+     * Indicates if the application is creating an announcement.
+     *
+     * @var bool
+     */
+    public $creatingAnnouncement = false;
+
+    /**
      * Indicates if the application is editing an announcement.
      *
      * @var bool
@@ -64,8 +71,8 @@ class AnnouncementManager extends Component
      * @var array
      */
     public $createAnnouncementForm = [
-        'title' => 'Test Announcement Title',
-        'message' => 'This is a test announcement message for testing purposes.',
+        'title' => '',
+        'message' => '',
         'send_email' => false,
         'published_at' => null,
         'target_roles' => [],
@@ -116,12 +123,35 @@ class AnnouncementManager extends Component
 
         abort_unless(SubscriptionEntitlementGate::allows($this->team), 403);
 
-        // Set default published_at to now
-        $this->createAnnouncementForm['published_at'] = '';
-        
-        // Set default text for title and message
-        $this->createAnnouncementForm['title'] = 'Test Announcement Title';
-        $this->createAnnouncementForm['message'] = 'This is a test announcement message for testing purposes.';
+        $this->resetCreateAnnouncementForm();
+    }
+
+    /**
+     * Open the create announcement modal.
+     *
+     * @return void
+     */
+    public function openCreateAnnouncementModal()
+    {
+        if (! $this->canCreateAnnouncements()) {
+            return;
+        }
+
+        $this->resetErrorBag();
+        $this->resetCreateAnnouncementForm();
+        $this->creatingAnnouncement = true;
+    }
+
+    /**
+     * Cancel announcement creation.
+     *
+     * @return void
+     */
+    public function cancelCreateAnnouncement()
+    {
+        $this->resetErrorBag();
+        $this->resetCreateAnnouncementForm();
+        $this->creatingAnnouncement = false;
     }
 
     /**
@@ -179,6 +209,7 @@ class AnnouncementManager extends Component
         }
 
         $this->resetCreateAnnouncementForm();
+        $this->creatingAnnouncement = false;
 
         $this->banner(__('Announcement created successfully.'));
         
@@ -415,8 +446,8 @@ class AnnouncementManager extends Component
     {
         $this->resetErrorBag();
         $this->createAnnouncementForm = [
-            'title' => 'Test Announcement Title',
-            'message' => 'This is a test announcement message for testing purposes.',
+            'title' => '',
+            'message' => '',
             'send_email' => false,
             'published_at' => '',
             'target_roles' => [],

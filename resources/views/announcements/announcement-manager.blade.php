@@ -1,146 +1,4 @@
 <div>
-    @if($this->canCreateAnnouncements())
-        <!-- Create Announcement Section -->
-        <x-form-section submit="storeAnnouncement">
-            <x-slot name="title">
-                Create New Announcement
-            </x-slot>
-
-            <x-slot name="description">
-                Create a new announcement for your {{ config('afterburner.entity_label') }}. Announcements can be targeted to specific roles and scheduled for delivery.
-            </x-slot>
-
-            <x-slot name="form">
-                <!-- Title -->
-                <div class="col-span-6">
-                    <x-label for="create_title" value="{{ __('Title') }}" />
-                    <x-input id="create_title" type="text" class="mt-1 block w-full" wire:model="createAnnouncementForm.title" />
-                    <x-input-error for="createAnnouncementForm.title" class="mt-2" />
-                </div>
-
-                <!-- Message -->
-                <div class="col-span-6">
-                    <x-label for="create_message" value="{{ __('Message') }}" />
-                    <x-textarea-input id="create_message" class="mt-1 block w-full" wire:model="createAnnouncementForm.message" rows="6" />
-                    <x-input-error for="createAnnouncementForm.message" class="mt-2" />
-                </div>
-
-                <!-- Published At and Send Email - Compact Row -->
-                <div class="col-span-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Published At -->
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <x-label for="create_published_at" value="Publish Date & Time (Optional)" />
-                                <div class="relative" x-data="{ tooltipOpen: false }">
-                                    <button 
-                                        type="button"
-                                        @click="tooltipOpen = !tooltipOpen"
-                                        @mouseleave="tooltipOpen = false"
-                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                        aria-label="Information about publish date">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </button>
-                                    <div 
-                                        x-show="tooltipOpen"
-                                        x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        @click.away="tooltipOpen = false"
-                                        class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                        style="display: none;">
-                                        <p class="text-sm text-gray-600 dark:text-gray-300">
-                                            Leave empty to save as draft. Announcements will be visible when the publish date arrives.
-                                        </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                            <strong>Note:</strong> Times will be saved in your {{ config('afterburner.entity_label') }}'s timezone ({{ $this->team->timezone ?? config('app.timezone', 'UTC') }}), even though the picker displays your computer's timezone.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <x-input id="create_published_at" type="datetime-local" class="mt-1 block w-full max-w-xs" wire:model="createAnnouncementForm.published_at" />
-                            <x-input-error for="createAnnouncementForm.published_at" class="mt-2" />
-                        </div>
-
-                        <!-- Send Email -->
-                        <div class="flex items-end">
-                            <div class="flex items-center">
-                                <input type="checkbox" wire:model="createAnnouncementForm.send_email" id="create_send_email" class="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900">
-                                <label for="create_send_email" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                    {{ __('Send Email Notification') }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Target Roles -->
-                @if(count($this->roles) > 0)
-                    <div class="col-span-6">
-                        <div class="flex items-center gap-2">
-                            <x-label for="create_target_roles" value="{{ __('Target Roles (Optional)') }}" />
-                            <div class="relative" x-data="{ tooltipOpen: false }">
-                                <button 
-                                    type="button"
-                                    @click="tooltipOpen = !tooltipOpen"
-                                    @mouseleave="tooltipOpen = false"
-                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                    aria-label="Information about target roles">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </button>
-                                <div 
-                                    x-show="tooltipOpen"
-                                    x-transition:enter="transition ease-out duration-200"
-                                    x-transition:enter-start="opacity-0 scale-95"
-                                    x-transition:enter-end="opacity-100 scale-100"
-                                    x-transition:leave="transition ease-in duration-150"
-                                    x-transition:leave-start="opacity-100 scale-100"
-                                    x-transition:leave-end="opacity-0 scale-95"
-                                    @click.away="tooltipOpen = false"
-                                    class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                    style="display: none;">
-                                    <p class="text-sm text-gray-600 dark:text-gray-300">
-                                        Leave empty to target all users. Select specific roles to limit visibility.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-3">
-                            @foreach($this->roles as $role)
-                                <label class="flex items-center">
-                                    <input type="checkbox" wire:model="createAnnouncementForm.target_roles" value="{{ $role->slug }}" class="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900">
-                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $role->name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                        <x-input-error for="createAnnouncementForm.target_roles" class="mt-2" />
-                    </div>
-                @endif
-            </x-slot>
-
-            <x-slot name="actions">
-                <x-action-message class="me-3" on="saved">
-                    {{ __('Created.') }}
-                </x-action-message>
-
-                <x-button>
-                    {{ __('Create') }}
-                </x-button>
-            </x-slot>
-        </x-form-section>
-    @endif
-
-    @if($this->canCreateAnnouncements() && $this->announcements->count() > 0)
-        <x-section-border />
-    @endif
-
     <!-- Announcements List Section -->
     @if($this->announcements->count() > 0)
         <div class="mt-10 sm:mt-0">
@@ -166,7 +24,13 @@
         </x-slot>
 
         <x-slot name="content">
-                    @if(!$this->canCreateAnnouncements() && $this->unreadCount > 0)
+                    @if($this->canCreateAnnouncements())
+                        <div class="mb-6 flex justify-end">
+                            <x-button wire:click="openCreateAnnouncementModal" no-spinner>
+                                Create announcement
+                            </x-button>
+                        </div>
+                    @elseif($this->unreadCount > 0)
             <div class="flex justify-end mb-4">
                             <button 
                                 wire:click="markAllAsRead" 
@@ -367,6 +231,14 @@
         </x-slot>
 
         <x-slot name="content">
+                    @if($this->canCreateAnnouncements())
+                        <div class="mb-6 flex justify-end">
+                            <x-button wire:click="openCreateAnnouncementModal" no-spinner>
+                                Create announcement
+                            </x-button>
+                        </div>
+                    @endif
+
                     <div class="text-center py-12">
                         <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
@@ -378,6 +250,138 @@
             </x-action-section>
                 </div>
     @endif
+
+    <!-- Create Announcement Modal -->
+    <x-dialog-modal wire:model.live="creatingAnnouncement" maxWidth="2xl">
+        <x-slot name="title">
+            {{ __('Create Announcement') }}
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="space-y-4">
+                <!-- Title -->
+                <div>
+                    <x-label for="create_title" value="{{ __('Title') }}" />
+                    <x-input id="create_title" type="text" class="mt-1 block w-full" wire:model="createAnnouncementForm.title" />
+                    <x-input-error for="createAnnouncementForm.title" class="mt-2" />
+                </div>
+
+                <!-- Message -->
+                <div>
+                    <x-label for="create_message" value="{{ __('Message') }}" />
+                    <x-textarea-input id="create_message" class="mt-1 block w-full" wire:model="createAnnouncementForm.message" rows="6" />
+                    <x-input-error for="createAnnouncementForm.message" class="mt-2" />
+                </div>
+
+                <!-- Published At and Send Email -->
+                <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <x-label for="create_published_at" value="Publish Date & Time (Optional)" />
+                                <div class="relative" x-data="{ tooltipOpen: false }">
+                                    <button
+                                        type="button"
+                                        @click="tooltipOpen = !tooltipOpen"
+                                        @mouseleave="tooltipOpen = false"
+                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                                        aria-label="Information about publish date">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </button>
+                                    <div
+                                        x-show="tooltipOpen"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100 scale-100"
+                                        x-transition:leave-end="opacity-0 scale-95"
+                                        @click.away="tooltipOpen = false"
+                                        class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+                                        style="display: none;">
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                                            Leave empty to save as draft. Announcements will be visible when the publish date arrives.
+                                        </p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                            <strong>Note:</strong> Times will be saved in your {{ config('afterburner.entity_label') }}'s timezone ({{ $this->team->timezone ?? config('app.timezone', 'UTC') }}), even though the picker displays your computer's timezone.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <x-input id="create_published_at" type="datetime-local" class="mt-1 block w-full" wire:model="createAnnouncementForm.published_at" />
+                            <x-input-error for="createAnnouncementForm.published_at" class="mt-2" />
+                        </div>
+
+                        <div class="flex items-end">
+                            <div class="flex items-center">
+                                <input type="checkbox" wire:model="createAnnouncementForm.send_email" id="create_send_email" class="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900">
+                                <label for="create_send_email" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                    {{ __('Send Email Notification') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target Roles -->
+                @if(count($this->roles) > 0)
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <x-label for="create_target_roles" value="{{ __('Target Roles (Optional)') }}" />
+                            <div class="relative" x-data="{ tooltipOpen: false }">
+                                <button
+                                    type="button"
+                                    @click="tooltipOpen = !tooltipOpen"
+                                    @mouseleave="tooltipOpen = false"
+                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                                    aria-label="Information about target roles">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                                <div
+                                    x-show="tooltipOpen"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-95"
+                                    @click.away="tooltipOpen = false"
+                                    class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+                                    style="display: none;">
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                                        Leave empty to target all users. Select specific roles to limit visibility.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-3">
+                            @foreach($this->roles as $role)
+                                <label class="flex items-center">
+                                    <input type="checkbox" wire:model="createAnnouncementForm.target_roles" value="{{ $role->slug }}" class="rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $role->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <x-input-error for="createAnnouncementForm.target_roles" class="mt-2" />
+                    </div>
+                @endif
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="cancelCreateAnnouncement" wire:loading.attr="disabled">
+                {{ __('Cancel') }}
+            </x-secondary-button>
+
+            <x-button class="ms-3" wire:click="storeAnnouncement" wire:loading.attr="disabled">
+                {{ __('Create') }}
+            </x-button>
+        </x-slot>
+    </x-dialog-modal>
 
     <!-- Edit Announcement Modal -->
     <x-dialog-modal wire:model.live="editingAnnouncement">
