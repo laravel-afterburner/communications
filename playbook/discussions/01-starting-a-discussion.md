@@ -19,7 +19,7 @@ Discussions let {{ entity_label }} members exchange messages in threaded convers
 
 - Keep subjects specific so threads stay easy to search later.
 - Avoid sharing sensitive personal data in open discussions.
-- Use [Announcements](/playbook/platform/posting-announcements) for one-way broadcasts to all members.
+- Use [Announcements](/playbook/communications/posting-announcements) for one-way broadcasts to all members.
 
 ## See also
 

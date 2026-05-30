@@ -1,0 +1,1 @@
+<select {{ $attributes }}>{{ $slot }}</select>

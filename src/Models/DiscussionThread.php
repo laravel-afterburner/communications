@@ -19,11 +19,13 @@ class DiscussionThread extends Model
         'property_id',
         'created_by',
         'locked_at',
+        'archived_at',
     ];
 
     protected $casts = [
         'scope' => DiscussionThreadScope::class,
         'locked_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     public function team(): BelongsTo
@@ -51,6 +53,27 @@ class DiscussionThread extends Model
     public function isLocked(): bool
     {
         return $this->locked_at !== null;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * @param  Builder<DiscussionThread>  $query
+     */
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    /**
+     * @param  Builder<DiscussionThread>  $query
+     */
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
     }
 
     /**

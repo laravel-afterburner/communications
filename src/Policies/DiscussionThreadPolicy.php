@@ -66,9 +66,19 @@ class DiscussionThreadPolicy
         return $this->update($user, $thread);
     }
 
+    public function delete(User $user, DiscussionThread $thread): bool
+    {
+        return $this->update($user, $thread);
+    }
+
+    public function archive(User $user, DiscussionThread $thread): bool
+    {
+        return $this->update($user, $thread);
+    }
+
     public function post(User $user, DiscussionThread $thread): bool
     {
-        if ($thread->isLocked()) {
+        if ($thread->isLocked() || $thread->isArchived()) {
             return false;
         }
 

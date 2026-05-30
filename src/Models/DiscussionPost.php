@@ -12,6 +12,7 @@ class DiscussionPost extends Model
         'thread_id',
         'user_id',
         'body',
+        'quoted_post_id',
         'edited_at',
     ];
 
@@ -27,5 +28,10 @@ class DiscussionPost extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function quotedPost(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'quoted_post_id');
     }
 }

@@ -1,19 +1,19 @@
 <?php
 
+use Afterburner\Communications\Mail\TeamAnnouncementMail;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Models\TeamAnnouncement;
 use App\Models\Team;
 use App\Support\Afterburner;
-use App\Support\Features;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
     if (Afterburner::hasTeamFeatures()
-        && config('afterburner-communications.announcements.enabled', true)
-        && class_exists(Features::class)
-        && Features::hasTeamAnnouncements()) {
+        && config('afterburner-communications.announcements.enabled', true)) {
         Route::get('/teams/{team}/announcements', function (Team $team) {
             return view('afterburner-communications::announcements.index', ['team' => $team]);
-        })->middleware('can:view,team')->name('team-announcements.index');
+        })->middleware('can:viewAny,'.TeamAnnouncement::class.',team')
+            ->name('team-announcements.index');
     }
 
     if (config('afterburner-communications.discussions.enabled', true)) {
@@ -41,5 +41,28 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
             return view('afterburner-communications::communications.log-index', ['team' => $team]);
         })->middleware('can:viewCommunicationLog,team')
             ->name('teams.communication-log.index');
+    }
+
+    if (app()->environment('local', 'development')
+        && config('afterburner-communications.announcements.enabled', true)) {
+        Route::get('/preview-email/team-announcement', function () {
+            $team = Team::first();
+            $announcement = TeamAnnouncement::first();
+
+            if (! $announcement && $team) {
+                $announcement = new TeamAnnouncement([
+                    'title' => 'New Announcement',
+                    'message' => 'Here is a brand new announcement.',
+                    'team_id' => $team->id,
+                    'created_by' => $team->user_id,
+                ]);
+            }
+
+            if (! $team || ! $announcement) {
+                return 'No team or announcement found. Please create test data first.';
+            }
+
+            return new TeamAnnouncementMail($announcement);
+        });
     }
 });

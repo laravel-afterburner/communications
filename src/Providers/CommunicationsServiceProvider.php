@@ -11,9 +11,13 @@ use Afterburner\Communications\Livewire\Communications\LogIndex;
 use Afterburner\Communications\Livewire\Discussions\Create as DiscussionsCreate;
 use Afterburner\Communications\Livewire\Discussions\Index as DiscussionsIndex;
 use Afterburner\Communications\Livewire\Discussions\Show as DiscussionsShow;
+use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Models\TeamAnnouncement;
 use Afterburner\Communications\Policies\CommunicationLogPolicy;
+use Afterburner\Communications\Policies\DiscussionPostPolicy;
 use Afterburner\Communications\Policies\DiscussionThreadPolicy;
+use Afterburner\Communications\Policies\TeamAnnouncementPolicy;
 use Afterburner\Communications\Services\CommunicationLogService;
 use Afterburner\Playbook\Support\Playbook;
 use App\Models\Team;
@@ -95,12 +99,18 @@ class CommunicationsServiceProvider extends ServiceProvider
     protected function registerPolicies(): void
     {
         Gate::policy(DiscussionThread::class, DiscussionThreadPolicy::class);
+        Gate::policy(DiscussionPost::class, DiscussionPostPolicy::class);
+        Gate::policy(TeamAnnouncement::class, TeamAnnouncementPolicy::class);
     }
 
     protected function registerGates(): void
     {
         Gate::define('viewCommunicationLog', function ($user, Team $team) {
             return app(CommunicationLogPolicy::class)->viewAny($user, $team);
+        });
+
+        Gate::define('postAnnouncements', function ($user, Team $team) {
+            return app(TeamAnnouncementPolicy::class)->create($user, $team);
         });
     }
 
@@ -139,6 +149,20 @@ class CommunicationsServiceProvider extends ServiceProvider
             ];
         }
 
+        if (config('afterburner-communications.announcements.enabled', true)) {
+            $children[] = [
+                'label' => 'Announcements',
+                'route' => 'team-announcements.index',
+                'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
+                'permission' => fn ($user) => $user?->currentTeam
+                    && $user->can('viewAny', [TeamAnnouncement::class, $user->currentTeam]),
+                'active' => fn () => request()->routeIs('team-announcements.*'),
+                'badge' => fn () => auth()->user()
+                    ? TeamAnnouncement::getUnreadCountForUser(auth()->user())
+                    : 0,
+            ];
+        }
+
         if (config('afterburner-communications.communication_log.enabled', true)) {
             $children[] = [
                 'label' => 'Chat Log',
@@ -157,6 +181,7 @@ class CommunicationsServiceProvider extends ServiceProvider
                 'order' => 25,
                 'children' => $children,
                 'active' => fn () => request()->routeIs('teams.discussions.*')
+                    || request()->routeIs('team-announcements.*')
                     || request()->routeIs('teams.communication-log.*'),
             ]);
         }

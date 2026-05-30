@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\LivewireServiceProvider;
+use Illuminate\Support\Facades\Blade;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -17,6 +18,10 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        require_once __DIR__.'/Fixtures/helpers.php';
+
+        Blade::anonymousComponentPath(__DIR__.'/Fixtures/Views/components');
 
         config([
             'afterburner-communications.enabled' => true,

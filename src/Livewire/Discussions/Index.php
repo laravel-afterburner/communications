@@ -18,6 +18,8 @@ class Index extends Component
 
     public string $scopeFilter = '';
 
+    public string $archiveFilter = 'active';
+
     public function mount(Team $team): void
     {
         abort_unless($team->id === Auth::user()?->currentTeam?->id, 403);
@@ -45,6 +47,8 @@ class Index extends Component
             ->visibleTo($user, $this->team->id)
             ->with(['creator', 'posts' => fn ($q) => $q->latest()->limit(1)])
             ->when($this->scopeFilter !== '', fn ($q) => $q->where('scope', $this->scopeFilter))
+            ->when($this->archiveFilter === 'active', fn ($q) => $q->notArchived())
+            ->when($this->archiveFilter === 'archived', fn ($q) => $q->archived())
             ->latest('updated_at')
             ->paginate(15);
     }

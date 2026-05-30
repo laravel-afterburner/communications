@@ -11,7 +11,6 @@ use Afterburner\Communications\Support\SubscriptionEntitlementGate;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
-use App\Support\Features;
 use App\Traits\InteractsWithBanner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -101,8 +100,7 @@ class AnnouncementManager extends Component
             $this->team = $team;
         }
 
-        // Check feature is enabled
-        if (!Features::hasTeamAnnouncements()) {
+        if (! config('afterburner-communications.announcements.enabled', true)) {
             abort(404);
         }
 
