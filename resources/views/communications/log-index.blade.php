@@ -1,8 +1,6 @@
-<x-app-layout>
+<x-app-layout :title="\Afterburner\Communications\Support\PageHeader::make(__('Communications'), detail: __('Chat log'))">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Chat Log') }}
-        </h2>
+        <x-afterburner-communications::page-header :section="__('Communications')" :detail="__('Chat log')" />
     </x-slot>
 
     <div class="py-12">

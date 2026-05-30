@@ -1,7 +1,7 @@
 {
     "name": "laravel-afterburner/communications",
     "description": "Team announcements, discussion threads, and communication log for Afterburner applications",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "type": "library",
     "license": "MIT",
     "require": {

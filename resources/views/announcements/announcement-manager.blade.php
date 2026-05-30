@@ -21,7 +21,7 @@
                 <!-- Message -->
                 <div class="col-span-6">
                     <x-label for="create_message" value="{{ __('Message') }}" />
-                    <textarea id="create_message" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" wire:model="createAnnouncementForm.message" rows="6"></textarea>
+                    <x-textarea-input id="create_message" class="mt-1 block w-full" wire:model="createAnnouncementForm.message" rows="6" />
                     <x-input-error for="createAnnouncementForm.message" class="mt-2" />
                 </div>
 
@@ -215,17 +215,17 @@
                                                 @php
                                                     $createdTime = $this->team->toTeamTimezone($announcement->created_at);
                                                 @endphp
-                                                <span>Created: {{ $createdTime->format('M d, Y g:i A') }} ({{ $createdTime->format('T') }})</span>
+                                                <span>Created: {!! format_date_superscript($createdTime, 'datetime') !!} ({{ $createdTime->format('T') }})</span>
                                                 @if($announcement->isPublished())
                                                     @php
                                                         $publishedTime = $this->team->toTeamTimezone($announcement->published_at);
                                                     @endphp
-                                                    <span>Published: {{ $publishedTime->format('M d, Y g:i A') }} ({{ $publishedTime->format('T') }})</span>
+                                                    <span>Published: {!! format_date_superscript($publishedTime, 'datetime') !!} ({{ $publishedTime->format('T') }})</span>
                                                 @elseif($announcement->isScheduled())
                                                     @php
                                                         $scheduledTime = $this->team->toTeamTimezone($announcement->published_at);
                                                     @endphp
-                                                    <span>Scheduled: {{ $scheduledTime->format('M d, Y g:i A') }} ({{ $scheduledTime->format('T') }})</span>
+                                                    <span>Scheduled: {!! format_date_superscript($scheduledTime, 'datetime') !!} ({{ $scheduledTime->format('T') }})</span>
                                                 @endif
                                                 @if($announcement->isPublished())
                                                     <span class="inline-flex items-center gap-1">
@@ -306,7 +306,7 @@
                                                     @php
                                                         $publishedTime = $this->team->toTeamTimezone($announcement->published_at);
                                                     @endphp
-                                                    <span>Published: {{ $publishedTime->format('M d, Y g:i A') }} ({{ $publishedTime->format('T') }})</span>
+                                                    <span>Published: {!! format_date_superscript($publishedTime, 'datetime') !!} ({{ $publishedTime->format('T') }})</span>
                                                 @endif
                                                 @if($announcement->target_roles)
                                                     <span>Target Roles: {{ implode(', ', $announcement->target_roles) }}</span>
@@ -318,27 +318,8 @@
                                     <div class="flex items-start space-x-2 flex-shrink-0">
                                         @if($isCreator)
                                             {{-- Creator sees edit and delete buttons --}}
-                                            <button 
-                                                type="button"
-                                                wire:click="editAnnouncement({{ $announcement->id }})" 
-                                                wire:loading.attr="disabled"
-                                                class="inline-flex items-center p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
-                                                title="Edit announcement">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                </svg>
-                                            </button>
-                                            
-                                            <button 
-                                                type="button"
-                                                wire:click="confirmAnnouncementDeletion({{ $announcement->id }})" 
-                                                wire:loading.attr="disabled"
-                                                class="inline-flex items-center p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
-                                                title="Delete announcement">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                </svg>
-                                            </button>
+                                            <x-action-icon type="edit" wire:click="editAnnouncement({{ $announcement->id }})" wire:loading.attr="disabled" title="Edit announcement" />
+                                            <x-action-icon type="delete" wire:click="confirmAnnouncementDeletion({{ $announcement->id }})" wire:loading.attr="disabled" title="Delete announcement" />
                                         @elseif($isUnread)
                                             {{-- Non-creator sees mark as read button if unread --}}
                                             <button 
@@ -416,7 +397,7 @@
                 <!-- Message -->
                 <div>
                     <x-label for="edit_message" value="{{ __('Message') }}" />
-                    <textarea id="edit_message" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" wire:model="editAnnouncementForm.message" rows="6"></textarea>
+                    <x-textarea-input id="edit_message" class="mt-1 block w-full" wire:model="editAnnouncementForm.message" rows="6" />
                     <x-input-error for="editAnnouncementForm.message" class="mt-2" />
                 </div>
 

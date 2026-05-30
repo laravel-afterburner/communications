@@ -6,12 +6,12 @@
         </div>
         <div>
             <x-label for="channelFilter" value="{{ __('Channel') }}" />
-            <select id="channelFilter" wire:model.live="channelFilter" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm">
+            <x-select-input id="channelFilter" wire:model.live="channelFilter" class="mt-1 block w-full">
                 <option value="">{{ __('All') }}</option>
                 @foreach($channels as $channel)
                     <option value="{{ $channel->value }}">{{ ucfirst(str_replace('_', ' ', $channel->value)) }}</option>
                 @endforeach
-            </select>
+            </x-select-input>
         </div>
         <div>
             <x-label for="dateFrom" value="{{ __('From') }}" />
@@ -37,7 +37,7 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($this->entries as $entry)
                     <tr wire:key="log-{{ $entry->id }}">
-                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ $entry->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{!! format_date_superscript($entry->created_at, 'datetime') !!}</td>
                         <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ ucfirst(str_replace('_', ' ', $entry->channel->value)) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $entry->subject }}</td>
                         <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate" title="{{ $entry->recipient_summary }}">{{ $entry->recipient_summary }}</td>

@@ -1,8 +1,8 @@
-<x-app-layout title="{{ Str::title(config('afterburner.entity_label')) }} Announcements">
+@php($entityLabel = Str::title(config('afterburner.entity_label')))
+
+<x-app-layout :title="\Afterburner\Communications\Support\PageHeader::make($entityLabel, detail: 'Announcements')">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ Str::title(config('afterburner.entity_label')) }} Announcements
-        </h2>
+        <x-afterburner-communications::page-header :section="$entityLabel" detail="Announcements" />
     </x-slot>
 
     <div>
@@ -11,4 +11,3 @@
         </div>
     </div>
 </x-app-layout>
-

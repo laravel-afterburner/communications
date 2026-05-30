@@ -47,6 +47,7 @@ class Show extends Component
         $this->thread->touch();
         $this->replyBody = '';
         $this->thread->load(['posts.user']);
+        $this->dispatch('replied');
         $this->banner(__('Reply posted.'));
     }
 

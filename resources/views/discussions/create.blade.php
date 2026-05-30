@@ -1,12 +1,10 @@
-<x-app-layout>
+<x-app-layout :title="\Afterburner\Communications\Support\PageHeader::make(__('Discussions'), action: __('New thread'))">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('New discussion') }}
-        </h2>
+        <x-afterburner-communications::page-header :section="__('Discussions')" :action="__('New thread')" />
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <div>
+        <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8">
             @livewire('discussions.create', ['team' => $team])
         </div>
     </div>

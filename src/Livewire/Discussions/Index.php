@@ -26,6 +26,16 @@ class Index extends Component
         $this->team = $team;
     }
 
+    public function viewThread(int $threadId)
+    {
+        return $this->redirectRoute('teams.discussions.show', ['team' => $this->team, 'thread' => $threadId]);
+    }
+
+    public function createThread()
+    {
+        return $this->redirectRoute('teams.discussions.create', ['team' => $this->team]);
+    }
+
     public function getThreadsProperty()
     {
         $user = Auth::user();
@@ -41,6 +51,8 @@ class Index extends Component
 
     public function render()
     {
-        return view('afterburner-communications::discussions.livewire.index');
+        return view('afterburner-communications::discussions.livewire.index', [
+            'canCreate' => Auth::user()?->can('create', [DiscussionThread::class, $this->team]),
+        ]);
     }
 }

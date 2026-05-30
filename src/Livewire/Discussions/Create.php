@@ -7,6 +7,7 @@ use Afterburner\Communications\Events\ThreadCreated;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
 use App\Models\Team;
+use App\Support\ValidationAttributes;
 use App\Traits\InteractsWithBanner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -50,7 +51,10 @@ class Create extends Component
                 'integer',
             ],
             'body' => ['required', 'string', 'max:10000'],
-        ]);
+        ], [], ValidationAttributes::merge([
+            'propertyId' => 'lot',
+            'body' => 'opening post',
+        ]));
 
         if ($this->scope === DiscussionThreadScope::Property->value && $hasProperties) {
             abort_unless(
