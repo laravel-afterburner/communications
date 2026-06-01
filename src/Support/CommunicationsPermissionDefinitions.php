@@ -13,14 +13,14 @@ final class CommunicationsPermissionDefinitions
 
         return [
             [
+                'name' => 'Post Announcements',
+                'slug' => 'post_announcements',
+                'description' => "Post announcements to the {$entity}",
+            ],
+            [
                 'name' => 'Manage Discussions',
                 'slug' => 'manage_discussions',
                 'description' => "Create and moderate discussion threads for the {$entity}",
-            ],
-            [
-                'name' => 'View Communication Log',
-                'slug' => 'view_communication_log',
-                'description' => "View outbound communication history for the {$entity}",
             ],
         ];
     }

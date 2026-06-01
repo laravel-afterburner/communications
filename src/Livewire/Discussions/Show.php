@@ -5,16 +5,20 @@ namespace Afterburner\Communications\Livewire\Discussions;
 use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Support\PropertySelectOptions;
 use App\Models\Team;
 use App\Support\ValidationAttributes;
 use App\Traits\InteractsWithBanner;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Show extends Component
 {
     use InteractsWithBanner;
+    use WithPagination;
 
     public Team $team;
 
@@ -26,11 +30,11 @@ class Show extends Component
 
     public bool $editingThread = false;
 
-    /** @var array{title: string, scope: string, propertyId: int|null} */
+    /** @var array{title: string, scope: string, propertyIds: array<int, string>} */
     public array $editThreadForm = [
         'title' => '',
         'scope' => 'team',
-        'propertyId' => null,
+        'propertyIds' => [],
     ];
 
     public bool $confirmingThreadDeletion = false;
@@ -59,10 +63,9 @@ class Show extends Component
     {
         abort_unless(Auth::user()->can('post', $this->thread), 403);
 
-        $post = $this->thread->posts->firstWhere('id', $postId)
-            ?? DiscussionPost::query()
-                ->where('thread_id', $this->thread->id)
-                ->findOrFail($postId);
+        $post = DiscussionPost::query()
+            ->where('thread_id', $this->thread->id)
+            ->findOrFail($postId);
 
         $this->quotedPostId = $post->id;
     }
@@ -101,6 +104,7 @@ class Show extends Component
         $this->thread->touch();
         $this->replyBody = '';
         $this->quotedPostId = null;
+        $this->resetPage('postsPage');
         $this->loadThread();
         $this->dispatch('replied');
         $this->banner(__('Reply posted.'));
@@ -113,9 +117,21 @@ class Show extends Component
         $this->editThreadForm = [
             'title' => $this->thread->title,
             'scope' => $this->thread->scope->value,
-            'propertyId' => $this->thread->property_id,
+            'propertyIds' => DiscussionThread::propertyModelClass() !== null
+                ? $this->thread->properties
+                    ->pluck('id')
+                    ->map(fn ($id) => (string) $id)
+                    ->all()
+                : [],
         ];
         $this->editingThread = true;
+    }
+
+    public function updatedEditThreadFormScope(string $scope): void
+    {
+        if ($scope !== DiscussionThreadScope::Property->value) {
+            $this->editThreadForm['propertyIds'] = [];
+        }
     }
 
     public function cancelEditThread(): void
@@ -134,31 +150,46 @@ class Show extends Component
         $this->validate([
             'editThreadForm.title' => ['required', 'string', 'max:255'],
             'editThreadForm.scope' => ['required', Rule::in(array_column(DiscussionThreadScope::cases(), 'value'))],
-            'editThreadForm.propertyId' => [
-                Rule::requiredIf(fn () => $this->editThreadForm['scope'] === DiscussionThreadScope::Property->value && $hasProperties),
-                'nullable',
+            'editThreadForm.propertyIds' => [
+                Rule::excludeIf(fn () => $this->editThreadForm['scope'] !== DiscussionThreadScope::Property->value || ! $hasProperties),
+                'required',
+                'array',
+                'min:1',
+            ],
+            'editThreadForm.propertyIds.*' => [
+                Rule::excludeIf(fn () => $this->editThreadForm['scope'] !== DiscussionThreadScope::Property->value || ! $hasProperties),
                 'integer',
             ],
         ], [], ValidationAttributes::merge([
             'editThreadForm.title' => 'title',
             'editThreadForm.scope' => 'scope',
-            'editThreadForm.propertyId' => 'lot',
+            'editThreadForm.propertyIds' => 'properties',
+            'editThreadForm.propertyIds.*' => 'lot',
         ]));
 
+        $normalizedPropertyIds = array_values(array_map('intval', $this->editThreadForm['propertyIds']));
+
         if ($this->editThreadForm['scope'] === DiscussionThreadScope::Property->value && $hasProperties) {
-            abort_unless(
-                $propertyModel::query()->where('team_id', $this->team->id)->whereKey($this->editThreadForm['propertyId'])->exists(),
-                422
-            );
+            $validCount = $propertyModel::query()
+                ->where('team_id', $this->team->id)
+                ->whereIn('id', $normalizedPropertyIds)
+                ->count();
+
+            abort_unless($validCount === count($normalizedPropertyIds), 422);
         }
 
         $this->thread->update([
             'title' => $this->editThreadForm['title'],
             'scope' => $this->editThreadForm['scope'],
-            'property_id' => $this->editThreadForm['scope'] === DiscussionThreadScope::Property->value
-                ? $this->editThreadForm['propertyId']
-                : null,
         ]);
+
+        if ($hasProperties) {
+            if ($this->editThreadForm['scope'] === DiscussionThreadScope::Property->value) {
+                $this->thread->properties()->sync($normalizedPropertyIds);
+            } else {
+                $this->thread->properties()->detach();
+            }
+        }
 
         $this->editingThread = false;
         $this->loadThread();
@@ -301,7 +332,7 @@ class Show extends Component
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, mixed>
+     * @return Collection<int, mixed>
      */
     public function getPropertiesProperty()
     {
@@ -323,21 +354,40 @@ class Show extends Component
             return null;
         }
 
-        return $this->thread->posts->firstWhere('id', $this->quotedPostId);
+        return $this->thread->posts()->with(['user', 'quotedPost.user'])->find($this->quotedPostId)
+            ?? DiscussionPost::query()
+                ->where('thread_id', $this->thread->id)
+                ->with(['user', 'quotedPost.user'])
+                ->find($this->quotedPostId);
     }
 
     protected function loadThread(): void
     {
-        $this->thread->refresh()->load([
+        $with = [
             'creator',
-            'posts' => fn ($query) => $query
-                ->with(['user', 'quotedPost.user'])
-                ->orderBy('created_at'),
-        ]);
+        ];
+
+        if (DiscussionThread::propertyModelClass() !== null) {
+            $with['properties'] = fn ($query) => $query->orderBy('lot_number');
+        }
+
+        $this->thread->refresh()->load($with);
     }
 
     public function render()
     {
-        return view('afterburner-communications::discussions.livewire.show');
+        $posts = DiscussionPost::query()
+            ->where('thread_id', $this->thread->id)
+            ->with(['user', 'quotedPost.user'])
+            ->orderBy('created_at')
+            ->paginate(20, pageName: 'postsPage');
+
+        return view('afterburner-communications::discussions.livewire.show', [
+            'posts' => $posts,
+            'propertyOptions' => PropertySelectOptions::forSelect(
+                $this->properties,
+                $this->editThreadForm['propertyIds'],
+            ),
+        ]);
     }
 }

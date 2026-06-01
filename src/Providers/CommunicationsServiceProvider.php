@@ -5,26 +5,24 @@ namespace Afterburner\Communications\Providers;
 use Afterburner\Communications\Console\Commands\InstallCommand;
 use Afterburner\Communications\Console\Commands\SendScheduledAnnouncements;
 use Afterburner\Communications\Database\Seeders\CommunicationsPermissionsSeeder;
-use Afterburner\Communications\Listeners\LogNotificationCommunication;
 use Afterburner\Communications\Livewire\Announcements\AnnouncementManager;
-use Afterburner\Communications\Livewire\Communications\LogIndex;
 use Afterburner\Communications\Livewire\Discussions\Create as DiscussionsCreate;
 use Afterburner\Communications\Livewire\Discussions\Index as DiscussionsIndex;
 use Afterburner\Communications\Livewire\Discussions\Show as DiscussionsShow;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
 use Afterburner\Communications\Models\TeamAnnouncement;
-use Afterburner\Communications\Policies\CommunicationLogPolicy;
 use Afterburner\Communications\Policies\DiscussionPostPolicy;
 use Afterburner\Communications\Policies\DiscussionThreadPolicy;
 use Afterburner\Communications\Policies\TeamAnnouncementPolicy;
-use Afterburner\Communications\Services\CommunicationLogService;
+use Afterburner\Communications\Support\CommunicationsPermissionGroups;
 use Afterburner\Playbook\Support\Playbook;
 use App\Models\Team;
 use App\Support\Navigation;
-use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Support\Facades\Event;
+use App\Support\PackageSeederRegistry;
+use App\Support\PermissionGroupsRegistry;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -41,7 +39,6 @@ class CommunicationsServiceProvider extends ServiceProvider
             'afterburner-communications'
         );
 
-        $this->app->singleton(CommunicationLogService::class);
     }
 
     public function boot(): void
@@ -67,9 +64,10 @@ class CommunicationsServiceProvider extends ServiceProvider
         $this->registerGates();
         $this->registerAuditSkipRoutes();
         $this->registerNavigation();
+        $this->registerPermissionGroups();
         $this->registerPlaybook();
-        $this->registerEventListeners();
         $this->registerPackageSeeder();
+        $this->registerSchedule();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -81,18 +79,12 @@ class CommunicationsServiceProvider extends ServiceProvider
 
     protected function registerLivewireComponents(): void
     {
-        if (config('afterburner-communications.announcements.enabled', true)) {
-            Livewire::component('team-announcements.announcement-manager', AnnouncementManager::class);
-        }
+        Livewire::component('team-announcements.announcement-manager', AnnouncementManager::class);
 
         if (config('afterburner-communications.discussions.enabled', true)) {
             Livewire::component('discussions.index', DiscussionsIndex::class);
             Livewire::component('discussions.show', DiscussionsShow::class);
             Livewire::component('discussions.create', DiscussionsCreate::class);
-        }
-
-        if (config('afterburner-communications.communication_log.enabled', true)) {
-            Livewire::component('communications.log-index', LogIndex::class);
         }
     }
 
@@ -105,10 +97,6 @@ class CommunicationsServiceProvider extends ServiceProvider
 
     protected function registerGates(): void
     {
-        Gate::define('viewCommunicationLog', function ($user, Team $team) {
-            return app(CommunicationLogPolicy::class)->viewAny($user, $team);
-        });
-
         Gate::define('postAnnouncements', function ($user, Team $team) {
             return app(TeamAnnouncementPolicy::class)->create($user, $team);
         });
@@ -149,41 +137,38 @@ class CommunicationsServiceProvider extends ServiceProvider
             ];
         }
 
-        if (config('afterburner-communications.announcements.enabled', true)) {
-            $children[] = [
-                'label' => 'Announcements',
-                'route' => 'team-announcements.index',
-                'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
-                'permission' => fn ($user) => $user?->currentTeam
-                    && $user->can('viewAny', [TeamAnnouncement::class, $user->currentTeam]),
-                'active' => fn () => request()->routeIs('team-announcements.*'),
-                'badge' => fn () => auth()->user()
-                    ? TeamAnnouncement::getUnreadCountForUser(auth()->user())
-                    : 0,
-            ];
-        }
-
-        if (config('afterburner-communications.communication_log.enabled', true)) {
-            $children[] = [
-                'label' => 'Chat Log',
-                'route' => 'teams.communication-log.index',
-                'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
-                'permission' => fn ($user) => $user?->currentTeam
-                    && $user->can('viewCommunicationLog', $user->currentTeam),
-                'active' => fn () => request()->routeIs('teams.communication-log.*'),
-            ];
-        }
+        $children[] = [
+            'label' => 'Announcements',
+            'route' => 'team-announcements.index',
+            'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
+            'permission' => fn ($user) => $user?->currentTeam
+                && $user->can('viewAny', [TeamAnnouncement::class, $user->currentTeam]),
+            'active' => fn () => request()->routeIs('team-announcements.*'),
+            'badge' => fn () => auth()->user()
+                ? TeamAnnouncement::getUnreadCountForUser(auth()->user())
+                : 0,
+        ];
 
         if ($children !== []) {
             Navigation::register([
-                'label' => 'Chat',
+                'label' => 'Communications',
                 'icon' => 'chat-bubble-left-right',
                 'order' => 25,
                 'children' => $children,
                 'active' => fn () => request()->routeIs('teams.discussions.*')
-                    || request()->routeIs('team-announcements.*')
-                    || request()->routeIs('teams.communication-log.*'),
+                    || request()->routeIs('team-announcements.*'),
             ]);
+        }
+    }
+
+    protected function registerPermissionGroups(): void
+    {
+        if (! class_exists(PermissionGroupsRegistry::class)) {
+            return;
+        }
+
+        foreach (CommunicationsPermissionGroups::definitions() as $label => $slugs) {
+            PermissionGroupsRegistry::register($label, $slugs);
         }
     }
 
@@ -203,17 +188,21 @@ class CommunicationsServiceProvider extends ServiceProvider
         ]);
     }
 
-    protected function registerEventListeners(): void
+    protected function registerPackageSeeder(): void
     {
-        if (config('afterburner-communications.communication_log.enabled', true)) {
-            Event::listen(NotificationSent::class, LogNotificationCommunication::class);
+        if (class_exists(PackageSeederRegistry::class)) {
+            PackageSeederRegistry::register(CommunicationsPermissionsSeeder::class);
         }
     }
 
-    protected function registerPackageSeeder(): void
+    protected function registerSchedule(): void
     {
-        if (class_exists(\App\Support\PackageSeederRegistry::class)) {
-            \App\Support\PackageSeederRegistry::register(CommunicationsPermissionsSeeder::class);
-        }
+        $this->app->booted(function () {
+            Schedule::command('announcements:send-scheduled')
+                ->everyMinute()
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->description('Send scheduled announcement emails');
+        });
     }
 }

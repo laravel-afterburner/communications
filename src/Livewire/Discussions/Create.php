@@ -6,9 +6,11 @@ use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Events\ThreadCreated;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Support\PropertySelectOptions;
 use App\Models\Team;
 use App\Support\ValidationAttributes;
 use App\Traits\InteractsWithBanner;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -23,7 +25,8 @@ class Create extends Component
 
     public string $scope = 'team';
 
-    public ?int $propertyId = null;
+    /** @var array<int, string> */
+    public array $propertyIds = [];
 
     public string $body = '';
 
@@ -33,6 +36,13 @@ class Create extends Component
         abort_unless(Auth::user()?->can('create', [DiscussionThread::class, $team]), 403);
 
         $this->team = $team;
+    }
+
+    public function updatedScope(): void
+    {
+        if ($this->scope !== DiscussionThreadScope::Property->value) {
+            $this->propertyIds = [];
+        }
     }
 
     public function store(): void
@@ -45,31 +55,44 @@ class Create extends Component
         $this->validate([
             'title' => ['required', 'string', 'max:255'],
             'scope' => ['required', Rule::in(array_column(DiscussionThreadScope::cases(), 'value'))],
-            'propertyId' => [
-                Rule::requiredIf(fn () => $this->scope === DiscussionThreadScope::Property->value && $hasProperties),
-                'nullable',
+            'propertyIds' => [
+                Rule::excludeIf(fn () => $this->scope !== DiscussionThreadScope::Property->value || ! $hasProperties),
+                'required',
+                'array',
+                'min:1',
+            ],
+            'propertyIds.*' => [
+                Rule::excludeIf(fn () => $this->scope !== DiscussionThreadScope::Property->value || ! $hasProperties),
                 'integer',
             ],
             'body' => ['required', 'string', 'max:10000'],
         ], [], ValidationAttributes::merge([
-            'propertyId' => 'lot',
+            'propertyIds' => 'properties',
+            'propertyIds.*' => 'lot',
             'body' => 'opening post',
         ]));
 
+        $normalizedPropertyIds = $this->normalizedPropertyIds();
+
         if ($this->scope === DiscussionThreadScope::Property->value && $hasProperties) {
-            abort_unless(
-                $propertyModel::query()->where('team_id', $this->team->id)->whereKey($this->propertyId)->exists(),
-                422
-            );
+            $validCount = $propertyModel::query()
+                ->where('team_id', $this->team->id)
+                ->whereIn('id', $normalizedPropertyIds)
+                ->count();
+
+            abort_unless($validCount === count($normalizedPropertyIds), 422);
         }
 
         $thread = DiscussionThread::query()->create([
             'team_id' => $this->team->id,
             'title' => $this->title,
             'scope' => $this->scope,
-            'property_id' => $this->scope === DiscussionThreadScope::Property->value ? $this->propertyId : null,
             'created_by' => Auth::id(),
         ]);
+
+        if ($this->scope === DiscussionThreadScope::Property->value && $hasProperties) {
+            $thread->properties()->sync($normalizedPropertyIds);
+        }
 
         DiscussionPost::query()->create([
             'thread_id' => $thread->id,
@@ -86,7 +109,7 @@ class Create extends Component
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, mixed>
+     * @return Collection<int, mixed>
      */
     public function getPropertiesProperty()
     {
@@ -102,8 +125,18 @@ class Create extends Component
             ->get(['id', 'lot_number']);
     }
 
+    /**
+     * @return array<int, int>
+     */
+    protected function normalizedPropertyIds(): array
+    {
+        return array_values(array_map('intval', $this->propertyIds));
+    }
+
     public function render()
     {
-        return view('afterburner-communications::discussions.livewire.create');
+        return view('afterburner-communications::discussions.livewire.create', [
+            'propertyOptions' => PropertySelectOptions::forSelect($this->properties, $this->propertyIds),
+        ]);
     }
 }

@@ -24,4 +24,3 @@ Discussions let {{ entity_label }} members exchange messages in threaded convers
 ## See also
 
 - [Communications overview](/playbook/communications/overview)
-- [Chat log](/playbook/communications/chat-log)

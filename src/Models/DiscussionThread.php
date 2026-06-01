@@ -9,14 +9,16 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
+
 class DiscussionThread extends Model
 {
     protected $fillable = [
         'team_id',
         'title',
         'scope',
-        'property_id',
         'created_by',
         'locked_at',
         'archived_at',
@@ -38,11 +40,47 @@ class DiscussionThread extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function property(): BelongsTo
+    public static function propertyModelClass(): ?string
     {
-        $model = config('afterburner-communications.property_model', \App\Models\Property::class);
+        $model = config('afterburner-communications.property_model');
 
-        return $this->belongsTo($model, 'property_id');
+        return is_string($model) && class_exists($model) ? $model : null;
+    }
+
+    public function properties(): BelongsToMany
+    {
+        $model = static::propertyModelClass();
+
+        if ($model === null) {
+            throw new \LogicException('Property model is not configured for discussion threads.');
+        }
+
+        return $this->belongsToMany(
+            $model,
+            'discussion_thread_property',
+            'discussion_thread_id',
+            'property_id',
+        )->withTimestamps();
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function propertyLotLabels(): Collection
+    {
+        return $this->properties
+            ->sortBy('lot_number')
+            ->map(fn ($property) => __('Lot').' '.$property->lot_number)
+            ->values();
+    }
+
+    public function latestReplyAuthorName(): ?string
+    {
+        $latestPost = $this->relationLoaded('posts')
+            ? $this->posts->first()
+            : $this->posts()->with('user')->latest()->first();
+
+        return $latestPost?->user?->name;
     }
 
     public function posts(): HasMany

@@ -19,14 +19,15 @@
 
     @if($scope === 'property' && $this->properties->isNotEmpty())
         <div class="max-w-xs">
-            <x-label for="propertyId" value="{{ __('Property') }}" />
-            <x-select-input id="propertyId" wire:model="propertyId" class="mt-1 block w-full">
-                <option value="">{{ __('Select property') }}</option>
-                @foreach($this->properties as $property)
-                    <option value="{{ $property->id }}">{{ __('Lot') }} {{ $property->lot_number }}</option>
-                @endforeach
-            </x-select-input>
-            <x-input-error for="propertyId" class="mt-2" />
+            <x-label for="propertyIds" value="{{ __('Properties') }}" />
+            <x-afterburner-communications::property-select
+                id="propertyIds"
+                wire-model="propertyIds"
+                :options="$propertyOptions"
+                :selected="$propertyIds"
+            />
+            <x-input-error for="propertyIds" class="mt-2" />
+            <x-input-error for="propertyIds.*" class="mt-2" />
         </div>
     @endif
 
@@ -37,7 +38,7 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-end gap-3">
-        <x-secondary-button type="button" wire:click="$redirectRoute('teams.discussions.index', ['team' => $team->id])" no-spinner>
+        <x-secondary-button href="{{ route('teams.discussions.index', ['team' => $team]) }}" wire:navigate>
             {{ __('Cancel') }}
         </x-secondary-button>
         <x-button type="submit" wire:loading.attr="disabled" wire:target="store">

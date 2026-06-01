@@ -49,7 +49,7 @@
     </div>
 
     <div class="space-y-4">
-        @foreach($thread->posts as $post)
+        @foreach($posts as $post)
             <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800" wire:key="post-{{ $post->id }}">
                 <div class="mb-2 flex flex-wrap items-start justify-between gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <div>
@@ -89,6 +89,10 @@
                 <div class="prose dark:prose-invert max-w-none whitespace-pre-wrap text-gray-800 dark:text-gray-200">{{ $post->body }}</div>
             </div>
         @endforeach
+    </div>
+
+    <div class="mt-4">
+        {{ $posts->links() }}
     </div>
 
     @can('post', $thread)
@@ -156,15 +160,16 @@
                 </div>
 
                 @if($editThreadForm['scope'] === 'property' && $this->properties->isNotEmpty())
-                    <div>
-                        <x-label for="edit_thread_property" value="{{ __('Property') }}" />
-                        <x-select-input id="edit_thread_property" wire:model="editThreadForm.propertyId" class="mt-1 block w-full">
-                            <option value="">{{ __('Select property') }}</option>
-                            @foreach($this->properties as $property)
-                                <option value="{{ $property->id }}">{{ __('Lot') }} {{ $property->lot_number }}</option>
-                            @endforeach
-                        </x-select-input>
-                        <x-input-error for="editThreadForm.propertyId" class="mt-2" />
+                    <div class="overflow-visible">
+                        <x-label for="edit_thread_property" value="{{ __('Properties') }}" />
+                        <x-afterburner-communications::property-select
+                            id="edit_thread_property"
+                            wire-model="editThreadForm.propertyIds"
+                            :options="$propertyOptions"
+                            :selected="$editThreadForm['propertyIds']"
+                        />
+                        <x-input-error for="editThreadForm.propertyIds" class="mt-2" />
+                        <x-input-error for="editThreadForm.propertyIds.*" class="mt-2" />
                     </div>
                 @endif
             </div>

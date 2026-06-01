@@ -49,9 +49,7 @@ class InstallCommand extends Command
             '',
             '# Afterburner Communications',
             'AFTERBURNER_COMMUNICATIONS_ENABLED=true',
-            'AFTERBURNER_COMMUNICATIONS_ANNOUNCEMENTS_ENABLED=true',
             'AFTERBURNER_COMMUNICATIONS_DISCUSSIONS_ENABLED=true',
-            'AFTERBURNER_COMMUNICATIONS_LOG_ENABLED=true',
         ];
 
         foreach (['.env', '.env.example'] as $file) {

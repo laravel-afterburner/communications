@@ -2,11 +2,9 @@
 
 namespace Afterburner\Communications\Livewire\Announcements;
 
-use Afterburner\Communications\Enums\CommunicationChannel;
 use Afterburner\Communications\Events\AnnouncementPublished;
 use Afterburner\Communications\Mail\TeamAnnouncementMail;
 use Afterburner\Communications\Models\TeamAnnouncement;
-use Afterburner\Communications\Services\CommunicationLogService;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
 use App\Models\Role;
 use App\Models\Team;
@@ -105,10 +103,6 @@ class AnnouncementManager extends Component
             $this->team = Team::findOrFail($team);
         } else {
             $this->team = $team;
-        }
-
-        if (! config('afterburner-communications.announcements.enabled', true)) {
-            abort(404);
         }
 
         // Ensure user is a member of this team
@@ -495,17 +489,6 @@ class AnnouncementManager extends Component
                 $recipients->push($user->email);
             }
         }
-
-        app(CommunicationLogService::class)->log(
-            teamId: $this->team->id,
-            channel: CommunicationChannel::Email,
-            subject: $announcement->title,
-            bodySnapshot: $announcement->message,
-            recipientSummary: $recipients->unique()->take(20)->implode(', ').($recipients->count() > 20 ? '…' : ''),
-            sentBy: Auth::id(),
-            source: $announcement,
-            metadata: ['recipient_count' => $recipients->count()],
-        );
 
         $announcement->update(['emails_sent_at' => now()]);
     }

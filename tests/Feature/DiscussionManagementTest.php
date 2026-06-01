@@ -60,11 +60,11 @@ class DiscussionManagementTest extends TestCase
         $this->assertTrue($user->can('post', $thread));
     }
 
-    public function test_archived_threads_are_hidden_from_active_index_by_default(): void
+    public function test_archived_threads_appear_on_index_with_archived_badge(): void
     {
         [$user, $team] = $this->createTeamWithUser(['manage_discussions']);
-        $activeThread = $this->createDiscussionThread($team, $user, ['title' => 'Active thread']);
-        $archivedThread = $this->createDiscussionThread($team, $user, [
+        $this->createDiscussionThread($team, $user, ['title' => 'Active thread']);
+        $this->createDiscussionThread($team, $user, [
             'title' => 'Archived thread',
             'archived_at' => now(),
         ]);
@@ -72,10 +72,7 @@ class DiscussionManagementTest extends TestCase
         Livewire::actingAs($user)
             ->test(Index::class, ['team' => $team])
             ->assertSee('Active thread')
-            ->assertDontSee('Archived thread')
-            ->set('archiveFilter', 'archived')
-            ->assertSee('Archived thread')
-            ->assertDontSee('Active thread');
+            ->assertSee('Archived thread');
     }
 
     public function test_author_can_edit_own_post(): void

@@ -8,8 +8,7 @@ use App\Support\Afterburner;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
-    if (Afterburner::hasTeamFeatures()
-        && config('afterburner-communications.announcements.enabled', true)) {
+    if (Afterburner::hasTeamFeatures()) {
         Route::get('/teams/{team}/announcements', function (Team $team) {
             return view('afterburner-communications::announcements.index', ['team' => $team]);
         })->middleware('can:viewAny,'.TeamAnnouncement::class.',team')
@@ -36,15 +35,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
             ->name('teams.discussions.show');
     }
 
-    if (config('afterburner-communications.communication_log.enabled', true)) {
-        Route::get('/teams/{team}/communication-log', function (Team $team) {
-            return view('afterburner-communications::communications.log-index', ['team' => $team]);
-        })->middleware('can:viewCommunicationLog,team')
-            ->name('teams.communication-log.index');
-    }
-
-    if (app()->environment('local', 'development')
-        && config('afterburner-communications.announcements.enabled', true)) {
+    if (app()->environment('local', 'development')) {
         Route::get('/preview-email/team-announcement', function () {
             $team = Team::first();
             $announcement = TeamAnnouncement::first();

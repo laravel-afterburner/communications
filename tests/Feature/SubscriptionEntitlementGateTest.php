@@ -88,28 +88,6 @@ class SubscriptionEntitlementGateTest extends TestCase
         $this->assertTrue($user->can('create', [DiscussionThread::class, $team]));
     }
 
-    public function test_communication_log_denied_without_entitlement_even_with_permission(): void
-    {
-        [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['view_communication_log'],
-            planFeatures: ['features' => []],
-            trialEndsAt: now()->subDay(),
-        );
-
-        $this->assertFalse($user->can('viewCommunicationLog', $team));
-    }
-
-    public function test_communication_log_allowed_with_entitlement_and_permission(): void
-    {
-        [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['view_communication_log'],
-            planFeatures: ['features' => ['communications']],
-            trialEndsAt: now()->subDay(),
-        );
-
-        $this->assertTrue($user->can('viewCommunicationLog', $team));
-    }
-
     public function test_thread_view_denied_without_entitlement_even_with_permission(): void
     {
         [$creator, $team] = $this->createSubscribedTeamWithUser(

@@ -1,12 +1,11 @@
 # Afterburner Communications Package
 
-Team-scoped announcements, discussion threads, and outbound communication log for Laravel Afterburner Jetstream.
+Team-scoped announcements and discussion threads for Laravel Afterburner Jetstream.
 
 ## Features
 
 - **Announcements** — role-targeted posts, read tracking, scheduled email (`announcements:send-scheduled`)
 - **Discussion threads** — scopes: `council`, `team`, `property` (optional lot link)
-- **Communication log** — auditable outbound record (email / in-app / system), separate from `AuditService`
 
 ## Installation
 
@@ -41,7 +40,7 @@ php artisan migrate
 php artisan db:seed --class="Afterburner\\Communications\\Database\\Seeders\\CommunicationsPermissionsSeeder"
 ```
 
-If you use `migrate:fresh --seed`, register `CommunicationsPermissionsSeeder` with your app's `PackageSeederRegistry` (or call it from `DatabaseSeeder`) so discussion and communication-log permissions are assigned beyond the default role templates.
+If you use `migrate:fresh --seed`, register `CommunicationsPermissionsSeeder` with your app's `PackageSeederRegistry` (or call it from `DatabaseSeeder`) so discussion permissions are assigned beyond the default role templates.
 
 ## Configuration
 
@@ -49,9 +48,7 @@ Environment variables (added by the install command):
 
 ```env
 AFTERBURNER_COMMUNICATIONS_ENABLED=true
-AFTERBURNER_COMMUNICATIONS_ANNOUNCEMENTS_ENABLED=true
 AFTERBURNER_COMMUNICATIONS_DISCUSSIONS_ENABLED=true
-AFTERBURNER_COMMUNICATIONS_LOG_ENABLED=true
 ```
 
 Package options live in `config/afterburner-communications.php`. Discussions default on when `afterburner.entity_label` is `strata`.
@@ -60,9 +57,8 @@ Package options live in `config/afterburner-communications.php`. Discussions def
 
 | Slug | Purpose |
 |------|---------|
-| `post_announcements` | Host `RoleTemplates` (unchanged) |
+| `post_announcements` | Create and manage team announcements |
 | `manage_discussions` | Create / lock threads |
-| `view_communication_log` | Team communication log UI |
 
 Seeded via `CommunicationsPermissionsSeeder` (registered with `PackageSeederRegistry`).
 
@@ -70,7 +66,6 @@ Seeded via `CommunicationsPermissionsSeeder` (registered with `PackageSeederRegi
 
 - `AnnouncementPublished`
 - `ThreadCreated`
-- `CommunicationLogged`
 
 ## Scheduled Tasks
 

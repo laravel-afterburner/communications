@@ -42,4 +42,3 @@ When **Send email** is enabled, emails are sent automatically when the announcem
 
 - [Communications overview](/playbook/communications/overview)
 - [Starting a discussion](/playbook/communications/starting-a-discussion)
-- [Using the chat log](/playbook/communications/chat-log)

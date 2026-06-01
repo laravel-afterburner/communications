@@ -79,6 +79,26 @@ trait AssignsPermissionsToTeamOwners
                     DB::table('role_permission')->insertOrIgnore($data);
                 }
                 $assignedCount++;
+            } elseif (in_array('role_slug', $rolePermissionColumns, true) && in_array('permission_slug', $rolePermissionColumns, true)) {
+                foreach ($permissions as $permission) {
+                    $data = ['role_slug' => $highestRole->slug, 'permission_slug' => $permission['slug']];
+                    if ($hasTimestamps) {
+                        $data['created_at'] = $now;
+                        $data['updated_at'] = $now;
+                    }
+                    DB::table('role_permission')->insertOrIgnore($data);
+                }
+                $assignedCount++;
+            } elseif (in_array('role_id', $rolePermissionColumns, true) && in_array('permission_id', $rolePermissionColumns, true)) {
+                foreach ($insertedPermissionIds as $permissionId) {
+                    $data = ['role_id' => $highestRole->id, 'permission_id' => $permissionId];
+                    if ($hasTimestamps) {
+                        $data['created_at'] = $now;
+                        $data['updated_at'] = $now;
+                    }
+                    DB::table('role_permission')->insertOrIgnore($data);
+                }
+                $assignedCount++;
             }
         }
 

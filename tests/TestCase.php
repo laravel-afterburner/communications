@@ -6,9 +6,9 @@ use Afterburner\Communications\Providers\CommunicationsServiceProvider;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Livewire\LivewireServiceProvider;
-use Illuminate\Support\Facades\Blade;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -26,7 +26,7 @@ abstract class TestCase extends BaseTestCase
         config([
             'afterburner-communications.enabled' => true,
             'afterburner-communications.discussions.enabled' => true,
-            'afterburner-communications.communication_log.enabled' => true,
+            'afterburner-communications.property_model' => null,
         ]);
     }
 
@@ -61,8 +61,8 @@ abstract class TestCase extends BaseTestCase
     {
         $now = now();
         $permissions = [
+            ['name' => 'Post Announcements', 'slug' => 'post_announcements', 'description' => null, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Manage Discussions', 'slug' => 'manage_discussions', 'description' => null, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'View Communication Log', 'slug' => 'view_communication_log', 'description' => null, 'created_at' => $now, 'updated_at' => $now],
         ];
 
         foreach ($permissions as $permission) {
