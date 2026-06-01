@@ -2,10 +2,10 @@
 
 return [
 
-    'enabled' => env('AFTERBURNER_COMMUNICATIONS_ENABLED', true),
+    'enabled' => true,
 
     'discussions' => [
-        'enabled' => env('AFTERBURNER_COMMUNICATIONS_DISCUSSIONS_ENABLED', true),
+        'enabled' => true,
     ],
 
     /*
@@ -20,7 +20,7 @@ return [
         'council_member',
     ],
 
-    'property_model' => env('AFTERBURNER_PROPERTY_MODEL', \App\Models\Property::class),
+    'property_model' => \App\Models\Property::class,
 
     'audit' => [
         'skip_routes' => [

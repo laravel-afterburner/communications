@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('thread_id')->constrained('discussion_threads')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('body');
+            $table->foreignId('quoted_post_id')
+                ->nullable()
+                ->constrained('discussion_posts')
+                ->nullOnDelete();
             $table->timestamp('edited_at')->nullable();
             $table->timestamps();
 

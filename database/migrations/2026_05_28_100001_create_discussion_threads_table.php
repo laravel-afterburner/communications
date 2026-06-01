@@ -16,10 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('property_id')->nullable();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamp('locked_at')->nullable();
+            $table->timestamp('archived_at')->nullable();
             $table->timestamps();
 
             $table->index(['team_id', 'scope']);
             $table->index(['team_id', 'created_at']);
+            $table->index(['team_id', 'archived_at']);
         });
     }
 
