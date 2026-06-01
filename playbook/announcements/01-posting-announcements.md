@@ -14,17 +14,16 @@ Members with the **Post Announcements** permission (or {{ entity_label }} owners
 
 ## Steps
 
-1. Open **Chat** from the main navigation.
-2. Select **Announcements**.
-3. Enter a **title** and **message**.
-4. Optionally set a **publish date** to schedule the announcement for later.
-5. Optionally enable **Send email** to deliver the announcement by email when it publishes.
-6. Optionally restrict visibility with **Target roles** so only members in selected roles see the announcement.
-7. Save the announcement.
+1. Open **Communications → Announcements** from the main navigation.
+2. Enter a **title** and **message**.
+3. Optionally set a **publish date** to schedule the announcement for later.
+4. Optionally enable **Send email** to deliver the announcement by email when it publishes.
+5. Optionally restrict visibility with **Target roles** so only members in selected roles see the announcement.
+6. Save the announcement.
 
 ## Reading and tracking
 
-- Unread announcements show a badge on **Chat** and **Announcements** in the navigation.
+- Unread announcements show a badge on **Communications** and **Announcements** in the navigation.
 - Open an announcement and use **Mark as read** to clear it from your unread count.
 - Authors can view read statistics showing how many eligible members have opened each announcement.
 
@@ -34,11 +33,11 @@ When **Send email** is enabled, emails are sent automatically when the announcem
 
 ## Best practices
 
-- Use announcements for broadcasts; use [Discussions](/playbook/communications/starting-a-discussion) for two-way conversation.
+- Use announcements for broadcasts; use [Discussions](/help/communications/starting-a-discussion) for two-way conversation.
 - Target roles when a notice applies only to council, treasurers, or another subset of members.
 - Keep titles short so members can scan the list quickly.
 
 ## See also
 
-- [Communications overview](/playbook/communications/overview)
-- [Starting a discussion](/playbook/communications/starting-a-discussion)
+- [Communications overview](/help/communications/overview)
+- [Starting a discussion](/help/communications/starting-a-discussion)

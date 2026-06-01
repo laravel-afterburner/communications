@@ -8,15 +8,17 @@ order: 10
 
 The Communications package adds {{ entity_label }}-scoped **Announcements** and **Discussions** for keeping members informed.
 
+Open **Communications** from the main navigation. When both features are enabled, the menu includes **Announcements** and **Discussions** as child items.
+
 ## Who can use Communications
 
-Any member with a current {{ entity_label }} context can access enabled communication features. Individual areas (announcements, discussions) may require additional permissions.
+Any member with a current {{ entity_label }} context can access enabled communication features. Individual areas may require additional permissions — for example, **Post Announcements** to create broadcasts.
 
 ## Related guides
 
-- [Platform notification center](/playbook/platform/notification-center)
+- [Platform notification center](/help/platform/notification-center)
 
 ## Next steps
 
-- [Posting announcements](/playbook/communications/posting-announcements)
-- [Starting a discussion](/playbook/communications/starting-a-discussion)
+- [Posting announcements](/help/communications/posting-announcements)
+- [Starting a discussion](/help/communications/starting-a-discussion)
