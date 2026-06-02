@@ -12,7 +12,7 @@ final class CommunicationsPermissionGroups
         return [
             'Communications' => [
                 'post_announcements',
-                'manage_discussions',
+                ...DiscussionPermissions::all(),
             ],
         ];
     }

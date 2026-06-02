@@ -94,65 +94,47 @@
                                                 @if($announcement->isPublished())
                                                     <span class="inline-flex items-center gap-1">
                                                         <span>Read: {{ $announcement->getReadCount() }}/{{ $announcement->getEligibleUsersCount() }}</span>
-                                                        <div class="relative" x-data="{ tooltipOpen: false }">
-                                                            <button 
-                                                                type="button"
-                                                                @click="tooltipOpen = !tooltipOpen"
-                                                                @mouseleave="tooltipOpen = false"
-                                                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                                                aria-label="View read status details">
-                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                                </svg>
-                                                            </button>
-                                                            <div 
-                                                                x-show="tooltipOpen"
-                                                                x-transition:enter="transition ease-out duration-200"
-                                                                x-transition:enter-start="opacity-0 scale-95"
-                                                                x-transition:enter-end="opacity-100 scale-100"
-                                                                x-transition:leave="transition ease-in duration-150"
-                                                                x-transition:leave-start="opacity-100 scale-100"
-                                                                x-transition:leave-end="opacity-0 scale-95"
-                                                                @click.away="tooltipOpen = false"
-                                                                class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                                                style="display: none;">
-                                                                @php
-                                                                    $readers = $announcement->getReaders();
-                                                                    $nonReaders = $announcement->getNonReaders();
-                                                                @endphp
-                                                                <div class="space-y-3">
-                                                                    @if($readers->count() > 0)
-                                                                        <div>
-                                                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                                                                Read ({{ $readers->count() }}):
-                                                                            </div>
-                                                                            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                                                                                @foreach($readers as $reader)
-                                                                                    <div>{{ $reader->name }}</div>
-                                                                                @endforeach
-                                                                            </div>
+                                                        <x-afterburner-communications::info-hint
+                                                            label="View read status details"
+                                                            width="w-72"
+                                                            scrollable
+                                                        >
+                                                            @php
+                                                                $readers = $announcement->getReaders();
+                                                                $nonReaders = $announcement->getNonReaders();
+                                                            @endphp
+                                                            <div class="space-y-3">
+                                                                @if($readers->count() > 0)
+                                                                    <div>
+                                                                        <div class="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                                            Read ({{ $readers->count() }}):
                                                                         </div>
-                                                                    @endif
-                                                                    @if($nonReaders->count() > 0)
-                                                                        <div>
-                                                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                                                                Not Read ({{ $nonReaders->count() }}):
-                                                                            </div>
-                                                                            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                                                                                @foreach($nonReaders as $nonReader)
-                                                                                    <div>{{ $nonReader->name }}</div>
-                                                                                @endforeach
-                                                                            </div>
+                                                                        <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                                                            @foreach($readers as $reader)
+                                                                                <div>{{ $reader->name }}</div>
+                                                                            @endforeach
                                                                         </div>
-                                                                    @endif
-                                                                    @if($readers->count() === 0 && $nonReaders->count() === 0)
-                                                                        <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                                            No eligible users found.
+                                                                    </div>
+                                                                @endif
+                                                                @if($nonReaders->count() > 0)
+                                                                    <div>
+                                                                        <div class="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                                            Not Read ({{ $nonReaders->count() }}):
                                                                         </div>
-                                                                    @endif
-                                                                </div>
+                                                                        <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                                                            @foreach($nonReaders as $nonReader)
+                                                                                <div>{{ $nonReader->name }}</div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                                @if($readers->count() === 0 && $nonReaders->count() === 0)
+                                                                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                                        No eligible users found.
+                                                                    </div>
+                                                                @endif
                                                             </div>
-                                                        </div>
+                                                        </x-afterburner-communications::info-hint>
                                                     </span>
                                                 @endif
                                                 @if($announcement->target_roles)
@@ -279,36 +261,12 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <x-label for="create_published_at" value="Publish Date & Time (Optional)" />
-                                <div class="relative" x-data="{ tooltipOpen: false }">
-                                    <button
-                                        type="button"
-                                        @click="tooltipOpen = !tooltipOpen"
-                                        @mouseleave="tooltipOpen = false"
-                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                        aria-label="Information about publish date">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </button>
-                                    <div
-                                        x-show="tooltipOpen"
-                                        x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        @click.away="tooltipOpen = false"
-                                        class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                        style="display: none;">
-                                        <p class="text-sm text-gray-600 dark:text-gray-300">
-                                            Leave empty to save as draft. Announcements will be visible when the publish date arrives.
-                                        </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                            <strong>Note:</strong> Times will be saved in your {{ config('afterburner.entity_label') }}'s timezone ({{ $this->team->timezone ?? config('app.timezone', 'UTC') }}), even though the picker displays your computer's timezone.
-                                        </p>
-                                    </div>
-                                </div>
+                                <x-afterburner-communications::info-hint
+                                    label="Information about publish date"
+                                    width="w-72"
+                                >
+                                    @include('afterburner-communications::announcements.partials.publish-date-hint-content', ['team' => $this->team])
+                                </x-afterburner-communications::info-hint>
                             </div>
                             <x-input id="create_published_at" type="datetime-local" class="mt-1 block w-full" wire:model="createAnnouncementForm.published_at" />
                             <x-input-error for="createAnnouncementForm.published_at" class="mt-2" />
@@ -330,33 +288,11 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <x-label for="create_target_roles" value="{{ __('Target Roles (Optional)') }}" />
-                            <div class="relative" x-data="{ tooltipOpen: false }">
-                                <button
-                                    type="button"
-                                    @click="tooltipOpen = !tooltipOpen"
-                                    @mouseleave="tooltipOpen = false"
-                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                    aria-label="Information about target roles">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </button>
-                                <div
-                                    x-show="tooltipOpen"
-                                    x-transition:enter="transition ease-out duration-200"
-                                    x-transition:enter-start="opacity-0 scale-95"
-                                    x-transition:enter-end="opacity-100 scale-100"
-                                    x-transition:leave="transition ease-in duration-150"
-                                    x-transition:leave-start="opacity-100 scale-100"
-                                    x-transition:leave-end="opacity-0 scale-95"
-                                    @click.away="tooltipOpen = false"
-                                    class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                    style="display: none;">
-                                    <p class="text-sm text-gray-600 dark:text-gray-300">
-                                        Leave empty to target all users. Select specific roles to limit visibility.
-                                    </p>
-                                </div>
-                            </div>
+                            <x-afterburner-communications::info-hint
+                                label="Information about target roles"
+                                text="Leave empty to target all users. Select specific roles to limit visibility."
+                                width="w-56"
+                            />
                         </div>
                         <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-3">
                             @foreach($this->roles as $role)
@@ -412,36 +348,12 @@
                         <div>
                             <div class="flex items-center gap-2">
                     <x-label for="edit_published_at" value="Publish Date & Time (Optional)" />
-                                <div class="relative" x-data="{ tooltipOpen: false }">
-                                    <button 
-                                        type="button"
-                                        @click="tooltipOpen = !tooltipOpen"
-                                        @mouseleave="tooltipOpen = false"
-                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                        aria-label="Information about publish date">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </button>
-                                    <div 
-                                        x-show="tooltipOpen"
-                                        x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        @click.away="tooltipOpen = false"
-                                        class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                        style="display: none;">
-                                        <p class="text-sm text-gray-600 dark:text-gray-300">
-                                            Leave empty to save as draft. Announcements will be visible when the publish date arrives.
-                                        </p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                            <strong>Note:</strong> Times will be saved in your {{ config('afterburner.entity_label') }}'s timezone ({{ $this->team->timezone ?? config('app.timezone', 'UTC') }}), even though the picker displays your computer's timezone.
-                                        </p>
-                                    </div>
-                                </div>
+                                <x-afterburner-communications::info-hint
+                                    label="Information about publish date"
+                                    width="w-72"
+                                >
+                                    @include('afterburner-communications::announcements.partials.publish-date-hint-content', ['team' => $this->team])
+                                </x-afterburner-communications::info-hint>
                             </div>
                     <x-input id="edit_published_at" type="datetime-local" class="mt-1 block w-full" wire:model="editAnnouncementForm.published_at" />
                     <x-input-error for="editAnnouncementForm.published_at" class="mt-2" />
@@ -463,33 +375,11 @@
                 <div>
                     <div class="flex items-center gap-2">
                     <x-label for="edit_target_roles" value="{{ __('Target Roles (Optional)') }}" />
-                        <div class="relative" x-data="{ tooltipOpen: false }">
-                            <button 
-                                type="button"
-                                @click="tooltipOpen = !tooltipOpen"
-                                @mouseleave="tooltipOpen = false"
-                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-                                aria-label="Information about target roles">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </button>
-                            <div 
-                                x-show="tooltipOpen"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                @click.away="tooltipOpen = false"
-                                class="absolute left-0 z-10 mt-2 w-80 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-                                style="display: none;">
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
-                                    Leave empty to target all users. Select specific roles to limit visibility.
-                                </p>
-                            </div>
-                        </div>
+                        <x-afterburner-communications::info-hint
+                            label="Information about target roles"
+                            text="Leave empty to target all users. Select specific roles to limit visibility."
+                            width="w-56"
+                        />
                     </div>
                     <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-3">
                         @foreach($this->roles as $role)

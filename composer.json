@@ -1,7 +1,7 @@
 {
     "name": "laravel-afterburner/communications",
     "description": "Team announcements and discussion threads for Afterburner applications",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -25,7 +25,8 @@
             "Afterburner\\Communications\\Tests\\": "tests/",
             "App\\Models\\": "tests/Fixtures/Models/",
             "App\\Traits\\": "tests/Fixtures/Traits/",
-            "App\\Support\\": "tests/Fixtures/Support/"
+            "App\\Support\\": "tests/Fixtures/Support/",
+            "App\\Support\\Audit\\": "tests/Fixtures/Support/Audit/"
         }
     },
     "scripts": {

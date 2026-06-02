@@ -5,6 +5,8 @@ namespace Afterburner\Communications\Providers;
 use Afterburner\Communications\Console\Commands\InstallCommand;
 use Afterburner\Communications\Console\Commands\SendScheduledAnnouncements;
 use Afterburner\Communications\Database\Seeders\CommunicationsPermissionsSeeder;
+use Afterburner\Communications\Events\ThreadCreated;
+use Afterburner\Communications\Listeners\LogCommunicationsAudit;
 use Afterburner\Communications\Livewire\Announcements\AnnouncementManager;
 use Afterburner\Communications\Livewire\Discussions\Create as DiscussionsCreate;
 use Afterburner\Communications\Livewire\Discussions\Index as DiscussionsIndex;
@@ -16,11 +18,16 @@ use Afterburner\Communications\Policies\DiscussionPostPolicy;
 use Afterburner\Communications\Policies\DiscussionThreadPolicy;
 use Afterburner\Communications\Policies\TeamAnnouncementPolicy;
 use Afterburner\Communications\Support\CommunicationsPermissionGroups;
+use Afterburner\Communications\Support\DiscussionNotificationService;
 use Afterburner\Playbook\Support\Playbook;
 use App\Models\Team;
+use App\Support\Audit\AuditCategories;
+use App\Support\DashboardSections;
 use App\Support\Navigation;
+use App\Support\NavigationActive;
 use App\Support\PackageSeederRegistry;
 use App\Support\PermissionGroupsRegistry;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\ServiceProvider;
@@ -63,7 +70,10 @@ class CommunicationsServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerGates();
         $this->registerAuditSkipRoutes();
+        $this->registerAuditCategories();
+        $this->registerAuditListeners();
         $this->registerNavigation();
+        $this->registerDashboardSections();
         $this->registerPermissionGroups();
         $this->registerPlaybook();
         $this->registerPackageSeeder();
@@ -118,6 +128,27 @@ class CommunicationsServiceProvider extends ServiceProvider
         ]);
     }
 
+    protected function registerAuditCategories(): void
+    {
+        if (! class_exists(AuditCategories::class)) {
+            return;
+        }
+
+        AuditCategories::register([
+            'discussion' => 'Discussion',
+            'announcement' => 'Announcement',
+        ]);
+    }
+
+    protected function registerAuditListeners(): void
+    {
+        if (! config('audit.enabled', true)) {
+            return;
+        }
+
+        Event::listen(ThreadCreated::class, [LogCommunicationsAudit::class, 'handleThreadCreated']);
+    }
+
     protected function registerNavigation(): void
     {
         if (! class_exists(Navigation::class)) {
@@ -133,7 +164,10 @@ class CommunicationsServiceProvider extends ServiceProvider
                 'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
                 'permission' => fn ($user) => $user?->currentTeam
                     && $user->can('viewAny', [DiscussionThread::class, $user->currentTeam]),
-                'active' => fn () => request()->routeIs('teams.discussions.*'),
+                'active' => fn () => NavigationActive::routeIs('teams.discussions.*'),
+                'badge' => fn () => auth()->user()
+                    ? DiscussionNotificationService::getUnreadCountForUser(auth()->user())
+                    : 0,
             ];
         }
 
@@ -143,7 +177,7 @@ class CommunicationsServiceProvider extends ServiceProvider
             'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
             'permission' => fn ($user) => $user?->currentTeam
                 && $user->can('viewAny', [TeamAnnouncement::class, $user->currentTeam]),
-            'active' => fn () => request()->routeIs('team-announcements.*'),
+            'active' => fn () => NavigationActive::routeIs('team-announcements.*'),
             'badge' => fn () => auth()->user()
                 ? TeamAnnouncement::getUnreadCountForUser(auth()->user())
                 : 0,
@@ -155,8 +189,8 @@ class CommunicationsServiceProvider extends ServiceProvider
                 'icon' => 'chat-bubble-left-right',
                 'order' => 25,
                 'children' => $children,
-                'active' => fn () => request()->routeIs('teams.discussions.*')
-                    || request()->routeIs('team-announcements.*'),
+                'active' => fn () => NavigationActive::routeIs('teams.discussions.*')
+                    || NavigationActive::routeIs('team-announcements.*'),
             ]);
         }
     }
@@ -170,6 +204,23 @@ class CommunicationsServiceProvider extends ServiceProvider
         foreach (CommunicationsPermissionGroups::definitions() as $label => $slugs) {
             PermissionGroupsRegistry::register($label, $slugs);
         }
+    }
+
+    protected function registerDashboardSections(): void
+    {
+        if (! class_exists(DashboardSections::class)) {
+            return;
+        }
+
+        DashboardSections::register([
+            'key' => 'zone.schedule.announcements',
+            'label' => 'Announcements',
+            'description' => 'Recent community announcements.',
+            'group' => 'Schedule',
+            'group_order' => 40,
+            'order' => 20,
+            'available' => fn () => config('afterburner-communications.announcements.enabled', true),
+        ]);
     }
 
     protected function registerPlaybook(): void

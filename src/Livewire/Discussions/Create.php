@@ -6,6 +6,8 @@ use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Events\ThreadCreated;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Support\DiscussionMentionables;
+use Afterburner\Communications\Support\DiscussionNotificationService;
 use Afterburner\Communications\Support\PropertySelectOptions;
 use App\Models\Team;
 use App\Support\ValidationAttributes;
@@ -94,11 +96,15 @@ class Create extends Component
             $thread->properties()->sync($normalizedPropertyIds);
         }
 
-        DiscussionPost::query()->create([
+        $post = DiscussionPost::query()->create([
             'thread_id' => $thread->id,
             'user_id' => Auth::id(),
             'body' => $this->body,
         ]);
+
+        $notificationService = app(DiscussionNotificationService::class);
+        $notificationService->syncMentions($post, $this->body, $thread);
+        $notificationService->notifyForPost($post, Auth::user());
 
         event(new ThreadCreated($thread));
 
@@ -137,6 +143,13 @@ class Create extends Component
     {
         return view('afterburner-communications::discussions.livewire.create', [
             'propertyOptions' => PropertySelectOptions::forSelect($this->properties, $this->propertyIds),
+            'mentionableUsers' => DiscussionMentionables::asSelectOptions(
+                DiscussionMentionables::forNewThread(
+                    $this->team,
+                    DiscussionThreadScope::from($this->scope),
+                    Auth::user(),
+                ),
+            )->all(),
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace Afterburner\Communications\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class DiscussionPost extends Model
 {
@@ -33,5 +34,15 @@ class DiscussionPost extends Model
     public function quotedPost(): BelongsTo
     {
         return $this->belongsTo(self::class, 'quoted_post_id');
+    }
+
+    public function mentions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'discussion_post_mentions',
+            'discussion_post_id',
+            'user_id',
+        )->withTimestamps();
     }
 }

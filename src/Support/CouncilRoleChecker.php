@@ -14,13 +14,9 @@ final class CouncilRoleChecker
         return config('afterburner-communications.council_role_slugs', []);
     }
 
-    public static function isCouncilMember(User $user, int $teamId): bool
+    public static function hasCouncilRole(User $user, int $teamId): bool
     {
-        if (TeamPermissionGate::allows($user, $teamId, 'manage_discussions')) {
-            return true;
-        }
-
-        $slugs = static::slugs();
+        $slugs = self::slugs();
 
         if ($slugs === []) {
             return false;
@@ -30,5 +26,14 @@ final class CouncilRoleChecker
             ->where('team_id', $teamId)
             ->whereIn('slug', $slugs)
             ->exists();
+    }
+
+    public static function isCouncilMember(User $user, int $teamId): bool
+    {
+        if (DiscussionPermissions::canAccessCouncilDiscussions($user, $teamId)) {
+            return true;
+        }
+
+        return self::hasCouncilRole($user, $teamId);
     }
 }

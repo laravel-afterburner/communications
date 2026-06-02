@@ -32,8 +32,13 @@
     @endif
 
     <div>
-        <x-label for="body" value="{{ __('Opening post') }}" />
-        <x-textarea-input id="body" wire:model="body" rows="6" class="mt-1 block w-full" />
+        <x-afterburner-communications::mention-textarea
+            id="body"
+            wire-model="body"
+            :mentionable-users="$mentionableUsers"
+            :label="__('Opening post')"
+            rows="6"
+        />
         <x-input-error for="body" class="mt-2" />
     </div>
 

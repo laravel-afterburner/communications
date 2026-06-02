@@ -4,8 +4,10 @@ namespace Afterburner\Communications\Database\Seeders;
 
 use Afterburner\Communications\Database\Seeders\Concerns\AssignsPermissionsToRoles;
 use Afterburner\Communications\Database\Seeders\Concerns\AssignsPermissionsToTeamOwners;
+use Afterburner\Communications\Database\Seeders\Concerns\MigratesLegacyManageDiscussions;
 use Afterburner\Communications\Support\CommunicationsPermissionDefinitions;
 use Afterburner\Communications\Support\CommunicationsRolePermissions;
+use Afterburner\Communications\Support\DiscussionPermissions;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ class CommunicationsPermissionsSeeder extends Seeder
 {
     use AssignsPermissionsToRoles;
     use AssignsPermissionsToTeamOwners;
+    use MigratesLegacyManageDiscussions;
 
     public function run(): void
     {
@@ -38,6 +41,7 @@ class CommunicationsPermissionsSeeder extends Seeder
 
         if (! empty($insertedPermissionIds) && DB::getSchemaBuilder()->hasTable('role_permission')) {
             $this->assignPermissionsToTeamOwners($insertedPermissionIds, $permissions, $now);
+            $this->migrateLegacyManageDiscussions($now);
 
             $postAnnouncementsId = DB::table('permissions')
                 ->where('slug', 'post_announcements')
@@ -47,6 +51,18 @@ class CommunicationsPermissionsSeeder extends Seeder
                 $this->assignPermissionToRoles(
                     (int) $postAnnouncementsId,
                     CommunicationsRolePermissions::rolesWithPostAnnouncements(),
+                    $now
+                );
+            }
+
+            $createDiscussionsId = DB::table('permissions')
+                ->where('slug', DiscussionPermissions::CREATE)
+                ->value('id');
+
+            if ($createDiscussionsId) {
+                $this->assignPermissionToRoles(
+                    (int) $createDiscussionsId,
+                    CommunicationsRolePermissions::rolesWithCreateDiscussions(),
                     $now
                 );
             }

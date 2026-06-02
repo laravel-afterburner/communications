@@ -58,7 +58,14 @@ Package options live in `config/afterburner-communications.php`. Discussions def
 | Slug | Purpose |
 |------|---------|
 | `post_announcements` | Create and manage team announcements |
-| `manage_discussions` | Create / lock threads |
+| `create_discussions` | Start new discussion threads |
+| `edit_discussions` | Edit thread title, scope, and properties |
+| `archive_discussions` | Archive and restore threads |
+| `lock_discussions` | Lock and unlock threads |
+| `delete_discussions` | Permanently delete threads |
+| `moderate_discussion_posts` | Edit or delete other members' posts |
+
+Existing installs that still assign the legacy `manage_discussions` slug receive the full set of discussion permissions when the seeder runs again.
 
 Seeded via `CommunicationsPermissionsSeeder` (registered with `PackageSeederRegistry`).
 

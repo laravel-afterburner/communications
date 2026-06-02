@@ -5,8 +5,8 @@ namespace Afterburner\Communications\Policies;
 use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Models\DiscussionThread;
 use Afterburner\Communications\Support\CouncilRoleChecker;
+use Afterburner\Communications\Support\DiscussionPermissions;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
-use Afterburner\Communications\Support\TeamPermissionGate;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -44,8 +44,8 @@ class DiscussionThreadPolicy
             return false;
         }
 
-        return TeamPermissionGate::allows($user, $team->id, 'manage_discussions')
-            || CouncilRoleChecker::isCouncilMember($user, $team->id);
+        return DiscussionPermissions::canCreate($user, $team->id)
+            || CouncilRoleChecker::hasCouncilRole($user, $team->id);
     }
 
     public function update(User $user, DiscussionThread $thread): bool
@@ -58,22 +58,46 @@ class DiscussionThreadPolicy
             return false;
         }
 
-        return TeamPermissionGate::allows($user, $thread->team_id, 'manage_discussions');
+        return DiscussionPermissions::canEdit($user, $thread->team_id);
     }
 
     public function lock(User $user, DiscussionThread $thread): bool
     {
-        return $this->update($user, $thread);
+        if (! $this->belongsToThreadTeam($user, $thread)) {
+            return false;
+        }
+
+        if (! SubscriptionEntitlementGate::allows($thread->team)) {
+            return false;
+        }
+
+        return DiscussionPermissions::canLock($user, $thread->team_id);
     }
 
     public function delete(User $user, DiscussionThread $thread): bool
     {
-        return $this->update($user, $thread);
+        if (! $this->belongsToThreadTeam($user, $thread)) {
+            return false;
+        }
+
+        if (! SubscriptionEntitlementGate::allows($thread->team)) {
+            return false;
+        }
+
+        return DiscussionPermissions::canDelete($user, $thread->team_id);
     }
 
     public function archive(User $user, DiscussionThread $thread): bool
     {
-        return $this->update($user, $thread);
+        if (! $this->belongsToThreadTeam($user, $thread)) {
+            return false;
+        }
+
+        if (! SubscriptionEntitlementGate::allows($thread->team)) {
+            return false;
+        }
+
+        return DiscussionPermissions::canArchive($user, $thread->team_id);
     }
 
     public function post(User $user, DiscussionThread $thread): bool

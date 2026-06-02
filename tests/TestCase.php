@@ -3,6 +3,8 @@
 namespace Afterburner\Communications\Tests;
 
 use Afterburner\Communications\Providers\CommunicationsServiceProvider;
+use Afterburner\Communications\Support\CommunicationsPermissionDefinitions;
+use Afterburner\Communications\Support\DiscussionPermissions;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -57,17 +59,33 @@ abstract class TestCase extends BaseTestCase
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
+    /**
+     * @return list<string>
+     */
+    protected function allDiscussionPermissionSlugs(): array
+    {
+        return DiscussionPermissions::all();
+    }
+
     protected function seedPermissions(): void
     {
         $now = now();
-        $permissions = [
-            ['name' => 'Post Announcements', 'slug' => 'post_announcements', 'description' => null, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Manage Discussions', 'slug' => 'manage_discussions', 'description' => null, 'created_at' => $now, 'updated_at' => $now],
-        ];
+        $permissions = array_map(
+            fn (array $permission) => $permission + ['created_at' => $now, 'updated_at' => $now],
+            CommunicationsPermissionDefinitions::all()
+        );
 
         foreach ($permissions as $permission) {
             DB::table('permissions')->insert($permission);
         }
+
+        DB::table('permissions')->insert([
+            'name' => 'Manage Discussions',
+            'slug' => DiscussionPermissions::LEGACY_MANAGE,
+            'description' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 
     protected function createRoleWithPermissions(string $slug, array $permissionSlugs): int
@@ -93,10 +111,10 @@ abstract class TestCase extends BaseTestCase
         return $roleId;
     }
 
-    protected function createTeamWithUser(array $permissions = ['manage_discussions']): array
+    protected function createTeamWithUser(?array $permissions = null): array
     {
         $this->seedPermissions();
-        $roleId = $this->createRoleWithPermissions('member', $permissions);
+        $roleId = $this->createRoleWithPermissions('member', $permissions ?? $this->allDiscussionPermissionSlugs());
 
         $user = User::query()->create([
             'name' => 'Test User',

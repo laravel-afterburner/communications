@@ -5,14 +5,18 @@ namespace Afterburner\Communications\Livewire\Announcements;
 use Afterburner\Communications\Events\AnnouncementPublished;
 use Afterburner\Communications\Mail\TeamAnnouncementMail;
 use Afterburner\Communications\Models\TeamAnnouncement;
+use Afterburner\Communications\Support\CommunicationsAuditLogger;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use App\Traits\InteractsWithBanner;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -89,7 +93,6 @@ class AnnouncementManager extends Component
         'target_roles' => [],
     ];
 
-
     /**
      * Mount the component.
      *
@@ -106,7 +109,7 @@ class AnnouncementManager extends Component
         }
 
         // Ensure user is a member of this team
-        if (!Auth::user()->teams->contains($this->team)) {
+        if (! Auth::user()->teams->contains($this->team)) {
             abort(403, 'You are not a member of this '.config('afterburner.entity_label').'.');
         }
 
@@ -183,12 +186,14 @@ class AnnouncementManager extends Component
             'title' => $this->createAnnouncementForm['title'],
             'message' => $this->createAnnouncementForm['message'],
             'send_email' => $this->createAnnouncementForm['send_email'],
-            'published_at' => $this->createAnnouncementForm['published_at'] ? 
+            'published_at' => $this->createAnnouncementForm['published_at'] ?
                 $this->team->fromDateTimeLocal($this->createAnnouncementForm['published_at'], $userTimezone) : null,
-            'target_roles' => !empty($this->createAnnouncementForm['target_roles']) ? 
+            'target_roles' => ! empty($this->createAnnouncementForm['target_roles']) ?
                 $this->createAnnouncementForm['target_roles'] : null,
             'created_by' => Auth::id(),
         ]);
+
+        CommunicationsAuditLogger::announcementCreated($announcement, Auth::user());
 
         // Mark announcement as read for the creator since they already know about it
         $announcement->markAsReadBy(Auth::user());
@@ -206,7 +211,7 @@ class AnnouncementManager extends Component
         $this->creatingAnnouncement = false;
 
         $this->banner(__('Announcement created successfully.'));
-        
+
         // Refresh navigation menu to update announcement badge
         $this->dispatch('refresh-navigation-menu');
         $this->dispatch('refresh-notifications');
@@ -232,15 +237,15 @@ class AnnouncementManager extends Component
         }
 
         $this->announcementBeingEdited = $announcement;
-        
+
         // Get user's timezone for datetime-local conversion
         $userTimezone = Auth::user()->timezone ?? request()->cookie('timezone') ?? null;
-        
+
         $this->editAnnouncementForm = [
             'title' => $announcement->title,
             'message' => $announcement->message,
             'send_email' => $announcement->send_email,
-            'published_at' => $announcement->published_at ? 
+            'published_at' => $announcement->published_at ?
                 $this->team->toDateTimeLocal($announcement->published_at, $userTimezone) : '',
             'target_roles' => $announcement->target_roles ?? [],
         ];
@@ -280,6 +285,8 @@ class AnnouncementManager extends Component
         ]);
 
         $wasPublished = $this->announcementBeingEdited->isPublished();
+        $beforeTitle = $this->announcementBeingEdited->title;
+        $beforeMessage = $this->announcementBeingEdited->message;
 
         // Get user's timezone for datetime-local conversion
         $userTimezone = Auth::user()->timezone ?? request()->cookie('timezone') ?? null;
@@ -288,15 +295,29 @@ class AnnouncementManager extends Component
             'title' => $this->editAnnouncementForm['title'],
             'message' => $this->editAnnouncementForm['message'],
             'send_email' => $this->editAnnouncementForm['send_email'],
-            'published_at' => $this->editAnnouncementForm['published_at'] ? 
+            'published_at' => $this->editAnnouncementForm['published_at'] ?
                 $this->team->fromDateTimeLocal($this->editAnnouncementForm['published_at'], $userTimezone) : null,
-            'target_roles' => !empty($this->editAnnouncementForm['target_roles']) ? 
+            'target_roles' => ! empty($this->editAnnouncementForm['target_roles']) ?
                 $this->editAnnouncementForm['target_roles'] : null,
         ]);
 
+        $fieldChanges = [];
+
+        if ($beforeTitle !== $this->announcementBeingEdited->title) {
+            $fieldChanges['title'] = ['before' => $beforeTitle, 'after' => $this->announcementBeingEdited->title];
+        }
+
+        if ($beforeMessage !== $this->announcementBeingEdited->message) {
+            $fieldChanges['message'] = ['before' => $beforeMessage, 'after' => $this->announcementBeingEdited->message];
+        }
+
+        if ($fieldChanges !== []) {
+            CommunicationsAuditLogger::announcementUpdated($this->announcementBeingEdited, Auth::user(), $fieldChanges);
+        }
+
         // Send emails if requested and announcement is now published (wasn't before)
         $isNowPublished = $this->announcementBeingEdited->isPublished();
-        if ($this->announcementBeingEdited->send_email && $isNowPublished && !$wasPublished) {
+        if ($this->announcementBeingEdited->send_email && $isNowPublished && ! $wasPublished) {
             $this->sendAnnouncementEmails($this->announcementBeingEdited);
         }
 
@@ -304,7 +325,7 @@ class AnnouncementManager extends Component
         $this->editingAnnouncement = false;
 
         $this->banner(__('Announcement updated successfully.'));
-        
+
         // Refresh navigation menu to update announcement badge
         $this->dispatch('refresh-navigation-menu');
         $this->dispatch('refresh-notifications');
@@ -349,6 +370,7 @@ class AnnouncementManager extends Component
         }
 
         if ($this->announcementBeingDeleted) {
+            CommunicationsAuditLogger::announcementDeleted($this->announcementBeingDeleted, Auth::user());
             $this->announcementBeingDeleted->delete();
         }
 
@@ -356,7 +378,7 @@ class AnnouncementManager extends Component
         $this->announcementBeingDeleted = null;
 
         $this->banner(__('Announcement deleted successfully.'));
-        
+
         // Refresh navigation menu to update announcement badge
         $this->dispatch('refresh-navigation-menu');
         $this->dispatch('refresh-notifications');
@@ -405,7 +427,7 @@ class AnnouncementManager extends Component
      */
     public function isUnread($announcement)
     {
-        return !$announcement->hasBeenReadBy(Auth::user());
+        return ! $announcement->hasBeenReadBy(Auth::user());
     }
 
     /**
@@ -469,7 +491,6 @@ class AnnouncementManager extends Component
      * Send announcement emails to eligible users.
      *
      * @param  \App\Models\TeamAnnouncement  $announcement
-     * @return void
      */
     protected function sendAnnouncementEmails(TeamAnnouncement $announcement): void
     {
@@ -496,7 +517,7 @@ class AnnouncementManager extends Component
     /**
      * Get the announcements.
      *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return LengthAwarePaginator
      */
     public function getAnnouncementsProperty()
     {
@@ -504,16 +525,16 @@ class AnnouncementManager extends Component
         $canManageAnnouncements = SubscriptionEntitlementGate::allows($this->team)
             && Gate::check('postAnnouncements', $this->team);
         $teamId = $this->team->id;
-        
+
         if ($canManageAnnouncements) {
             // Announcement authors see all announcements (published and drafts)
             return TeamAnnouncement::where('team_id', $teamId)
-                ->with(['creator', 'readers', 'team.users' => function($query) use ($teamId) {
-                    $query->with(['roles' => function($q) use ($teamId) {
+                ->with(['creator', 'readers', 'team.users' => function ($query) use ($teamId) {
+                    $query->with(['roles' => function ($q) use ($teamId) {
                         $q->where('team_id', $teamId);
                     }]);
-                }, 'team.owner' => function($query) use ($teamId) {
-                    $query->with(['roles' => function($q) use ($teamId) {
+                }, 'team.owner' => function ($query) use ($teamId) {
+                    $query->with(['roles' => function ($q) use ($teamId) {
                         $q->where('team_id', $teamId);
                     }]);
                 }])
@@ -530,20 +551,20 @@ class AnnouncementManager extends Component
                 ->where('team_id', $teamId)
                 ->where(function ($query) use ($userRoleSlugs) {
                     $query->whereNull('target_roles')
-                          ->orWhere(function ($q) use ($userRoleSlugs) {
-                              if (!empty($userRoleSlugs)) {
-                                  foreach ($userRoleSlugs as $roleSlug) {
-                                      $q->orWhereJsonContains('target_roles', $roleSlug);
-                                  }
-                              }
-                          });
+                        ->orWhere(function ($q) use ($userRoleSlugs) {
+                            if (! empty($userRoleSlugs)) {
+                                foreach ($userRoleSlugs as $roleSlug) {
+                                    $q->orWhereJsonContains('target_roles', $roleSlug);
+                                }
+                            }
+                        });
                 })
-                ->with(['creator', 'readers', 'team.users' => function($query) use ($teamId) {
-                    $query->with(['roles' => function($q) use ($teamId) {
+                ->with(['creator', 'readers', 'team.users' => function ($query) use ($teamId) {
+                    $query->with(['roles' => function ($q) use ($teamId) {
                         $q->where('team_id', $teamId);
                     }]);
-                }, 'team.owner' => function($query) use ($teamId) {
-                    $query->with(['roles' => function($q) use ($teamId) {
+                }, 'team.owner' => function ($query) use ($teamId) {
+                    $query->with(['roles' => function ($q) use ($teamId) {
                         $q->where('team_id', $teamId);
                     }]);
                 }])
@@ -576,7 +597,7 @@ class AnnouncementManager extends Component
     /**
      * Get the available roles for this team.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getRolesProperty()
     {
@@ -586,7 +607,7 @@ class AnnouncementManager extends Component
     /**
      * Render the component.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function render()
     {

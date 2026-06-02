@@ -4,6 +4,7 @@ namespace Afterburner\Communications\Tests\Feature;
 
 use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Models\DiscussionThread;
+use Afterburner\Communications\Support\DiscussionPermissions;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
 use Afterburner\Communications\Tests\TestCase;
 use App\Models\SubscribedTeam;
@@ -26,7 +27,7 @@ class SubscriptionEntitlementGateTest extends TestCase
         config(['afterburner-subscriptions.enabled' => false]);
 
         [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => []],
             trialEndsAt: null,
         );
@@ -38,7 +39,7 @@ class SubscriptionEntitlementGateTest extends TestCase
 
     public function test_access_allowed_when_team_does_not_implement_subscription_methods(): void
     {
-        [$user, $team] = $this->createTeamWithUser(['manage_discussions']);
+        [$user, $team] = $this->createTeamWithUser([DiscussionPermissions::CREATE]);
 
         $this->assertFalse(method_exists($team, 'hasEntitlement'));
         $this->assertTrue(SubscriptionEntitlementGate::allows($team));
@@ -49,7 +50,7 @@ class SubscriptionEntitlementGateTest extends TestCase
     public function test_access_allowed_during_generic_trial_without_plan_feature(): void
     {
         [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => []],
             trialEndsAt: now()->addWeek(),
         );
@@ -63,7 +64,7 @@ class SubscriptionEntitlementGateTest extends TestCase
     public function test_access_denied_after_trial_when_plan_lacks_communications_feature(): void
     {
         [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => ['documents']],
             trialEndsAt: now()->subDay(),
         );
@@ -77,7 +78,7 @@ class SubscriptionEntitlementGateTest extends TestCase
     public function test_access_allowed_after_trial_when_plan_includes_communications_feature(): void
     {
         [$user, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => ['communications']],
             trialEndsAt: now()->subDay(),
         );
@@ -91,7 +92,7 @@ class SubscriptionEntitlementGateTest extends TestCase
     public function test_thread_view_denied_without_entitlement_even_with_permission(): void
     {
         [$creator, $team] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => ['communications']],
             trialEndsAt: now()->addWeek(),
         );
@@ -111,7 +112,7 @@ class SubscriptionEntitlementGateTest extends TestCase
         $thread->setRelation('team', $deniedTeam);
 
         [$member] = $this->createSubscribedTeamWithUser(
-            permissions: ['manage_discussions'],
+            permissions: [DiscussionPermissions::CREATE],
             planFeatures: ['features' => []],
             trialEndsAt: now()->subDay(),
             existingTeam: $team,
@@ -160,7 +161,7 @@ class SubscriptionEntitlementGateTest extends TestCase
      * @return array{0: User, 1: Team}
      */
     protected function createSubscribedTeamWithUser(
-        array $permissions = ['manage_discussions'],
+        ?array $permissions = null,
         array $planFeatures = ['features' => ['communications']],
         ?Carbon $trialEndsAt = null,
         ?Team $existingTeam = null,
@@ -176,7 +177,7 @@ class SubscriptionEntitlementGateTest extends TestCase
         }
 
         $this->seedPermissions();
-        $roleId = $this->createRoleWithPermissions('member', $permissions);
+        $roleId = $this->createRoleWithPermissions('member', $permissions ?? $this->allDiscussionPermissionSlugs());
 
         $user = User::query()->create([
             'name' => 'Test User',

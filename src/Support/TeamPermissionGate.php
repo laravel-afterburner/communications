@@ -2,7 +2,9 @@
 
 namespace Afterburner\Communications\Support;
 
+use App\Models\Team;
 use App\Models\User;
+use App\Support\PermissionCatalog;
 
 final class TeamPermissionGate
 {
@@ -11,7 +13,11 @@ final class TeamPermissionGate
      */
     public static function allowsAny(User $user, int $teamId, array $permissions): bool
     {
-        if (static::ownsTeam($user, $teamId)) {
+        if (class_exists(PermissionCatalog::class)) {
+            return PermissionCatalog::allowsAny($user, $teamId, $permissions);
+        }
+
+        if (self::ownsTeam($user, $teamId)) {
             return true;
         }
 
@@ -26,7 +32,7 @@ final class TeamPermissionGate
 
     public static function allows(User $user, int $teamId, string $permission): bool
     {
-        return static::allowsAny($user, $teamId, [$permission]);
+        return self::allowsAny($user, $teamId, [$permission]);
     }
 
     public static function ownsTeam(User $user, int $teamId): bool
@@ -35,7 +41,7 @@ final class TeamPermissionGate
             return $user->ownsTeamById($teamId);
         }
 
-        $teamModel = config('afterburner.team_model', \App\Models\Team::class);
+        $teamModel = config('afterburner.team_model', Team::class);
 
         return $teamModel::query()
             ->whereKey($teamId)

@@ -1,64 +1,98 @@
-<div class="space-y-6">
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400">{{ $thread->scope->label() }}</p>
-                <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $thread->title }}</h3>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    @if($thread->isLocked())
-                        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                            {{ __('Locked') }}
-                        </span>
-                    @endif
+<div
+    class="space-y-6"
+    x-data
+    @scroll-to-reply="$nextTick(() => {
+        document.getElementById('discussion-reply-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('replyBody')?.focus();
+    })"
+>
+    <div class="relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="absolute right-4 top-4 flex items-center gap-1">
+                @canany(['update', 'archive', 'lock', 'delete'], $thread)
+                    @can('update', $thread)
+                        <x-action-icon
+                            type="edit"
+                            wire:click="editThread"
+                            title="{{ __('Edit thread') }}"
+                        />
+                    @endcan
+
+                    @can('archive', $thread)
+                        @if($thread->isArchived())
+                            <x-afterburner-communications::thread-action-icon
+                                type="unarchive"
+                                wire:click="unarchiveThread"
+                                title="{{ __('Restore thread') }}"
+                            />
+                        @else
+                            <x-afterburner-communications::thread-action-icon
+                                type="archive"
+                                wire:click="archiveThread"
+                                title="{{ __('Archive thread') }}"
+                            />
+                        @endif
+                    @endcan
+
+                    @can('lock', $thread)
+                        @if($thread->isLocked())
+                            <x-afterburner-communications::thread-action-icon
+                                type="lock"
+                                wire:click="unlockThread"
+                                title="{{ __('Unlock thread') }}"
+                            />
+                        @else
+                            <x-afterburner-communications::thread-action-icon
+                                type="unlock"
+                                wire:click="lockThread"
+                                title="{{ __('Lock thread') }}"
+                            />
+                        @endif
+                    @endcan
+
+                    @can('delete', $thread)
+                        <x-action-icon
+                            type="delete"
+                            wire:click="confirmThreadDeletion"
+                            title="{{ __('Delete thread') }}"
+                        />
+                    @endcan
+                @else
                     @if($thread->isArchived())
-                        <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                            {{ __('Archived') }}
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            @can('update', $thread)
-                <div class="flex flex-wrap items-center gap-2">
-                    <x-secondary-button wire:click="editThread" type="button" no-spinner>{{ __('Edit') }}</x-secondary-button>
-
-                    @if($thread->isArchived())
-                        <x-secondary-button wire:click="unarchiveThread" type="button" no-spinner>{{ __('Restore') }}</x-secondary-button>
-                    @else
-                        <x-secondary-button wire:click="archiveThread" type="button" no-spinner>{{ __('Archive') }}</x-secondary-button>
+                        <x-afterburner-communications::thread-action-icon
+                            type="archive"
+                            disabled
+                            class="pointer-events-none"
+                            title="{{ __('Archived') }}"
+                        />
                     @endif
 
                     @if($thread->isLocked())
-                        <x-secondary-button wire:click="unlockThread" type="button" no-spinner>{{ __('Unlock') }}</x-secondary-button>
-                    @else
-                        <x-secondary-button wire:click="lockThread" type="button" no-spinner>{{ __('Lock thread') }}</x-secondary-button>
+                        <x-afterburner-communications::thread-action-icon
+                            type="lock"
+                            disabled
+                            class="pointer-events-none"
+                            title="{{ __('Locked') }}"
+                        />
                     @endif
+                @endcanany
+        </div>
 
-                    <x-danger-button wire:click="confirmThreadDeletion" type="button" no-spinner>{{ __('Delete') }}</x-danger-button>
-                </div>
-            @else
-                <div class="flex flex-wrap items-center gap-2">
-                    @if($thread->isLocked())
-                        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                            {{ __('Locked') }}
-                        </span>
-                    @endif
-                </div>
-            @endcan
+        <div class="pe-28">
+            <p class="text-sm font-medium tracking-wide text-gray-500 dark:text-gray-400">{{ $thread->scope->label() }} Discussion</p>
+            <h3 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $thread->title }}</h3>
         </div>
     </div>
 
     <div class="space-y-4">
         @foreach($posts as $post)
-            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800" wire:key="post-{{ $post->id }}">
-                <div class="mb-2 flex flex-wrap items-start justify-between gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <div
+                id="post-{{ $post->id }}"
+                class="scroll-mt-24 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-500 dark:border-gray-700 dark:bg-gray-800 [&:target]:border-indigo-400 [&:target]:ring-2 [&:target]:ring-indigo-400/60 dark:[&:target]:border-indigo-500 dark:[&:target]:ring-indigo-500/50"
+                wire:key="post-{{ $post->id }}"
+            >
+                <div class="mb-2 flex flex-wrap items-start justify-between gap-2 text-base text-gray-500 dark:text-gray-400">
                     <div>
-                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ $post->user->name }}</span>
-                        <span class="mx-2">&middot;</span>
-                        <span>{!! format_date_superscript($post->created_at, 'datetime') !!}</span>
-                        @if($post->edited_at)
-                            <span class="ml-1 text-xs italic">({{ __('edited') }})</span>
-                        @endif
+                        <span class="ml-1 font-medium text-gray-700 dark:text-gray-300">{{ $post->user->name }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         @can('post', $thread)
@@ -75,18 +109,29 @@
                     </div>
                 </div>
 
-                @if($post->quotedPost)
-                    <div class="mb-3 border-l-4 border-indigo-300 bg-gray-50 px-3 py-2 text-sm dark:border-indigo-600 dark:bg-gray-900/50">
-                        <p class="font-medium text-gray-600 dark:text-gray-400">
-                            {{ __('Quoting :name', ['name' => $post->quotedPost->user->name]) }}
-                        </p>
-                        <div class="mt-1 line-clamp-4 whitespace-pre-wrap text-gray-500 dark:text-gray-400">
-                            {{ Str::limit($post->quotedPost->body, 300) }}
+                <div class="rounded-lg border bg-gray-50 p-3 dark:bg-gray-900/50">
+                    @if($post->quotedPost)
+                        <div class="mb-2 flex flex-col gap-0 border-l-4 border-indigo-400 bg-indigo-50 py-1.5 pl-2 pr-2 text-sm dark:border-indigo-600 dark:bg-indigo-950/40">
+                            <p class="font-medium leading-tight text-indigo-900 dark:text-indigo-200">
+                                {{ __('Quoting :name', ['name' => $post->quotedPost->user->name]) }}
+                            </p>
+                            <p class="line-clamp-4 whitespace-pre-line leading-tight italic text-indigo-700 dark:text-indigo-300">
+                                &ldquo;{{ trim(Str::limit($post->quotedPost->body, 300)) }}&rdquo;
+                            </p>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
-                <div class="prose dark:prose-invert max-w-none whitespace-pre-wrap text-gray-800 dark:text-gray-200">{{ $post->body }}</div>
+                    <div class="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{!! \Afterburner\Communications\Support\DiscussionMentionFormatter::format($post->body, $post->mentions) !!}</div>
+                </div>
+                        
+                <div class="text-xs mt-1 mr-2 text-right">
+                    {!! format_date_superscript($post->created_at, 'datetime') !!}
+                    
+                    @if($post->edited_at)
+                        <span class="ml-1 text-xs italic">({{ __('edited') }})</span>
+                    @endif
+                </div>
+
             </div>
         @endforeach
     </div>
@@ -96,17 +141,17 @@
     </div>
 
     @can('post', $thread)
-        <form wire:submit="postReply" class="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <form id="discussion-reply-form" wire:submit="postReply" class="scroll-mt-24 space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             @if($this->quotedPost)
-                <div class="rounded-md border border-indigo-200 bg-indigo-50 p-3 dark:border-indigo-800 dark:bg-indigo-950/30">
+                <div class="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/30">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0 flex-1 text-sm">
-                            <p class="font-medium text-indigo-900 dark:text-indigo-200">
+                        <div class="flex min-w-0 flex-1 flex-col gap-0 text-sm">
+                            <p class="font-medium leading-tight text-indigo-900 dark:text-indigo-200">
                                 {{ __('Quoting :name', ['name' => $this->quotedPost->user->name]) }}
                             </p>
-                            <div class="mt-1 line-clamp-3 whitespace-pre-wrap text-indigo-700 dark:text-indigo-300">
-                                {{ Str::limit($this->quotedPost->body, 200) }}
-                            </div>
+                            <p class="line-clamp-3 whitespace-pre-line leading-tight italic text-indigo-700 dark:text-indigo-300">
+                                &ldquo;{{ trim(Str::limit($this->quotedPost->body, 200)) }}&rdquo;
+                            </p>
                         </div>
                         <button type="button" wire:click="cancelQuote" class="shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
                             <span class="sr-only">{{ __('Remove quote') }}</span>
@@ -116,11 +161,14 @@
                 </div>
             @endif
 
-            <div>
-                <x-label for="replyBody" value="{{ __('Reply') }}" />
-                <x-textarea-input id="replyBody" wire:model="replyBody" rows="4" class="mt-1 block w-full" />
-                <x-input-error for="replyBody" class="mt-2" />
-            </div>
+            <x-afterburner-communications::mention-textarea
+                id="replyBody"
+                wire-model="replyBody"
+                :mentionable-users="$mentionableUsers"
+                :label="__('Reply')"
+                rows="4"
+            />
+            <x-input-error for="replyBody" class="mt-2" />
             <div class="flex items-center justify-end gap-3">
                 <x-action-message on="replied" />
                 <x-button type="submit" wire:loading.attr="disabled" wire:target="postReply">
@@ -129,9 +177,13 @@
             </div>
         </form>
     @elseif($thread->isArchived())
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('This thread is archived.') }}</p>
+        <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('This thread is archived.') }}</p>
+        </div>
     @elseif($thread->isLocked())
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('This thread is locked.') }}</p>
+        <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('This thread is locked.') }}</p>
+        </div>
     @endif
 
     <x-dialog-modal wire:model.live="editingThread">
@@ -213,8 +265,13 @@
 
         <x-slot name="content">
             <div>
-                <x-label for="editPostBody" value="{{ __('Post') }}" />
-                <x-textarea-input id="editPostBody" wire:model="editPostBody" rows="6" class="mt-1 block w-full" />
+                <x-afterburner-communications::mention-textarea
+                    id="editPostBody"
+                    wire-model="editPostBody"
+                    :mentionable-users="$mentionableUsers"
+                    :label="__('Post')"
+                    rows="6"
+                />
                 <x-input-error for="editPostBody" class="mt-2" />
             </div>
         </x-slot>

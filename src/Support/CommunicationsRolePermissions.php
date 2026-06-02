@@ -27,4 +27,14 @@ final class CommunicationsRolePermissions
             'board_member',
         ];
     }
+
+    /**
+     * Role slugs that can start discussion threads by default.
+     *
+     * @return array<int, string>
+     */
+    public static function rolesWithCreateDiscussions(): array
+    {
+        return self::rolesWithPostAnnouncements();
+    }
 }

@@ -3,8 +3,8 @@
 namespace Afterburner\Communications\Policies;
 
 use Afterburner\Communications\Models\DiscussionPost;
+use Afterburner\Communications\Support\DiscussionPermissions;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
-use Afterburner\Communications\Support\TeamPermissionGate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -23,7 +23,7 @@ class DiscussionPostPolicy
         }
 
         return (int) $post->user_id === (int) $user->id
-            || TeamPermissionGate::allows($user, $post->thread->team_id, 'manage_discussions');
+            || DiscussionPermissions::canModeratePosts($user, $post->thread->team_id);
     }
 
     public function delete(User $user, DiscussionPost $post): bool
