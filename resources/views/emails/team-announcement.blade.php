@@ -1,15 +1,5 @@
 @component('mail::message', ['team' => $team])
 
-@slot('header')
-
-@component('mail::header', ['url' => config('app.url'), 'team' => $team, 'teamLogo' => $teamLogo ?? null])
-
-{{ $team->name }}
-
-@endcomponent
-
-@endslot
-
 # {{ $announcement->title }}
 
 {!! nl2br(e($announcement->message)) !!}

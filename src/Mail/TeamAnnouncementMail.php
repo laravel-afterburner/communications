@@ -62,7 +62,6 @@ class TeamAnnouncementMail extends Mailable implements ShouldQueue
             markdown: 'afterburner-communications::emails.team-announcement',
             with: [
                 'team' => $team,
-                'teamLogo' => $team->getLogoUrl(),
             ],
         );
     }
