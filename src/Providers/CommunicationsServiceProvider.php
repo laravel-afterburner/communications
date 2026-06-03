@@ -77,6 +77,7 @@ class CommunicationsServiceProvider extends ServiceProvider
         $this->registerPermissionGroups();
         $this->registerPlaybook();
         $this->registerPackageSeeder();
+        $this->registerSubscriptionPackageFeatures();
         $this->registerSchedule();
 
         if ($this->app->runningInConsole()) {
@@ -244,6 +245,18 @@ class CommunicationsServiceProvider extends ServiceProvider
         if (class_exists(PackageSeederRegistry::class)) {
             PackageSeederRegistry::register(CommunicationsPermissionsSeeder::class);
         }
+    }
+
+    protected function registerSubscriptionPackageFeatures(): void
+    {
+        if (! class_exists(\Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::class)) {
+            return;
+        }
+
+        \Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::register('communications', 'Communications', [
+            'Announcements',
+            'Discussions',
+        ]);
     }
 
     protected function registerSchedule(): void
