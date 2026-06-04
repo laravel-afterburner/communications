@@ -22,7 +22,11 @@ class DiscussionThreadPolicy
             return false;
         }
 
-        return SubscriptionEntitlementGate::allows($team);
+        if (! SubscriptionEntitlementGate::allows($team)) {
+            return false;
+        }
+
+        return DiscussionPermissions::canView($user, $team->id);
     }
 
     public function view(User $user, DiscussionThread $thread): bool
@@ -112,9 +116,8 @@ class DiscussionThreadPolicy
     protected function canAccessScope(User $user, DiscussionThread $thread): bool
     {
         return match ($thread->scope) {
-            DiscussionThreadScope::Council => CouncilRoleChecker::isCouncilMember($user, $thread->team_id),
-            DiscussionThreadScope::Team => true,
-            DiscussionThreadScope::Property => true,
+            DiscussionThreadScope::Council => DiscussionPermissions::canAccessCouncilDiscussions($user, $thread->team_id),
+            DiscussionThreadScope::Team, DiscussionThreadScope::Property => DiscussionPermissions::canView($user, $thread->team_id),
         };
     }
 

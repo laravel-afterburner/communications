@@ -20,6 +20,20 @@ final class DiscussionPermissions
 
     public const MODERATE_POSTS = 'moderate_discussion_posts';
 
+    public const VIEW = 'view_discussions';
+
+    /**
+     * @return list<string>
+     */
+    public static function viewAccessSlugs(): array
+    {
+        return [
+            self::VIEW,
+            self::LEGACY_MANAGE,
+            ...self::all(),
+        ];
+    }
+
     /**
      * @return list<string>
      */
@@ -74,6 +88,11 @@ final class DiscussionPermissions
     public static function canModeratePosts(User $user, int $teamId): bool
     {
         return TeamPermissionGate::allowsAny($user, $teamId, [self::MODERATE_POSTS, self::LEGACY_MANAGE]);
+    }
+
+    public static function canView(User $user, int $teamId): bool
+    {
+        return TeamPermissionGate::allowsAny($user, $teamId, self::viewAccessSlugs());
     }
 
     public static function canAccessCouncilDiscussions(User $user, int $teamId): bool

@@ -83,6 +83,22 @@ class DiscussionPermissionsTest extends TestCase
         $this->assertTrue($member->can('create', [DiscussionThread::class, $team]));
     }
 
+    public function test_member_with_view_discussions_can_access_discussion_index(): void
+    {
+        [$owner, $team] = $this->createTeamWithUser();
+        $member = $this->createAdditionalUser($team, [DiscussionPermissions::VIEW], 'viewer@example.com');
+
+        $this->assertTrue($member->can('viewAny', [DiscussionThread::class, $team]));
+    }
+
+    public function test_member_without_discussion_view_permission_cannot_access_discussion_index(): void
+    {
+        [$owner, $team] = $this->createTeamWithUser();
+        $member = $this->createAdditionalUser($team, [], 'guest@example.com');
+
+        $this->assertFalse($member->can('viewAny', [DiscussionThread::class, $team]));
+    }
+
     public function test_archive_action_requires_archive_permission(): void
     {
         [$owner, $team] = $this->createTeamWithUser();

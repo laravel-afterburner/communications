@@ -76,16 +76,8 @@ abstract class TestCase extends BaseTestCase
         );
 
         foreach ($permissions as $permission) {
-            DB::table('permissions')->insert($permission);
+            DB::table('permissions')->insertOrIgnore($permission);
         }
-
-        DB::table('permissions')->insert([
-            'name' => 'Manage Discussions',
-            'slug' => DiscussionPermissions::LEGACY_MANAGE,
-            'description' => null,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
     }
 
     protected function createRoleWithPermissions(string $slug, array $permissionSlugs): int

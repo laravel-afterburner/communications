@@ -20,7 +20,15 @@ class TeamAnnouncementPolicy
             return false;
         }
 
-        return SubscriptionEntitlementGate::allows($team);
+        if (! SubscriptionEntitlementGate::allows($team)) {
+            return false;
+        }
+
+        return TeamPermissionGate::allowsAny($user, $team->id, [
+            'view_announcements',
+            'post_announcements',
+            'manage_announcements',
+        ]);
     }
 
     public function create(User $user, Team $team): bool

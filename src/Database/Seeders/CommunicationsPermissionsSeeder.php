@@ -66,6 +66,30 @@ class CommunicationsPermissionsSeeder extends Seeder
                     $now
                 );
             }
+
+            $viewDiscussionsId = DB::table('permissions')
+                ->where('slug', DiscussionPermissions::VIEW)
+                ->value('id');
+
+            if ($viewDiscussionsId) {
+                $this->assignPermissionToRoles(
+                    (int) $viewDiscussionsId,
+                    CommunicationsRolePermissions::rolesWithViewDiscussions(),
+                    $now
+                );
+            }
+
+            $viewAnnouncementsId = DB::table('permissions')
+                ->where('slug', 'view_announcements')
+                ->value('id');
+
+            if ($viewAnnouncementsId) {
+                $this->assignPermissionToRoles(
+                    (int) $viewAnnouncementsId,
+                    CommunicationsRolePermissions::rolesWithViewAnnouncements(),
+                    $now
+                );
+            }
         }
     }
 }

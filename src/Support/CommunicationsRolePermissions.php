@@ -29,6 +29,20 @@ final class CommunicationsRolePermissions
     }
 
     /**
+     * Role slugs that can view announcements without posting.
+     *
+     * @return array<int, string>
+     */
+    public static function rolesWithViewAnnouncements(): array
+    {
+        return array_values(array_unique([
+            ...self::rolesWithPostAnnouncements(),
+            'strata_owner',
+            'member',
+        ]));
+    }
+
+    /**
      * Role slugs that can start discussion threads by default.
      *
      * @return array<int, string>
@@ -36,5 +50,22 @@ final class CommunicationsRolePermissions
     public static function rolesWithCreateDiscussions(): array
     {
         return self::rolesWithPostAnnouncements();
+    }
+
+    /**
+     * Role slugs that can open the discussions index and read threads.
+     *
+     * @return array<int, string>
+     */
+    public static function rolesWithViewDiscussions(): array
+    {
+        return array_values(array_unique([
+            ...self::rolesWithCreateDiscussions(),
+            'treasurer',
+            'council_member',
+            'strata_owner',
+            'member',
+            'board_member',
+        ]));
     }
 }

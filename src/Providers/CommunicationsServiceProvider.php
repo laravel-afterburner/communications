@@ -18,6 +18,7 @@ use Afterburner\Communications\Policies\DiscussionPostPolicy;
 use Afterburner\Communications\Policies\DiscussionThreadPolicy;
 use Afterburner\Communications\Policies\TeamAnnouncementPolicy;
 use Afterburner\Communications\Support\CommunicationsPermissionGroups;
+use Afterburner\Communications\Support\CommunicationsPermissions;
 use Afterburner\Communications\Support\DiscussionNotificationService;
 use Afterburner\Playbook\Support\Playbook;
 use App\Models\Team;
@@ -164,7 +165,7 @@ class CommunicationsServiceProvider extends ServiceProvider
                 'route' => 'teams.discussions.index',
                 'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
                 'permission' => fn ($user) => $user?->currentTeam
-                    && $user->can('viewAny', [DiscussionThread::class, $user->currentTeam]),
+                    && CommunicationsPermissions::canViewSection($user, $user->currentTeam, CommunicationsPermissions::SECTION_DISCUSSIONS),
                 'active' => fn () => NavigationActive::routeIs('teams.discussions.*'),
                 'badge' => fn () => auth()->user()
                     ? DiscussionNotificationService::getUnreadCountForUser(auth()->user())
@@ -177,7 +178,7 @@ class CommunicationsServiceProvider extends ServiceProvider
             'route' => 'team-announcements.index',
             'route_params' => fn () => ['team' => auth()->user()?->currentTeam?->id],
             'permission' => fn ($user) => $user?->currentTeam
-                && $user->can('viewAny', [TeamAnnouncement::class, $user->currentTeam]),
+                && CommunicationsPermissions::canViewSection($user, $user->currentTeam, CommunicationsPermissions::SECTION_ANNOUNCEMENTS),
             'active' => fn () => NavigationActive::routeIs('team-announcements.*'),
             'badge' => fn () => auth()->user()
                 ? TeamAnnouncement::getUnreadCountForUser(auth()->user())
@@ -189,6 +190,8 @@ class CommunicationsServiceProvider extends ServiceProvider
                 'label' => 'Communications',
                 'icon' => 'chat-bubble-left-right',
                 'order' => 25,
+                'permission' => fn ($user) => $user?->currentTeam
+                    && CommunicationsPermissions::canAccessModule($user, $user->currentTeam),
                 'children' => $children,
                 'active' => fn () => NavigationActive::routeIs('teams.discussions.*')
                     || NavigationActive::routeIs('team-announcements.*'),
