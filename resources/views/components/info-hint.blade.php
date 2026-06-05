@@ -1,13 +1,21 @@
 @props([
     'label',
     'text' => null,
-    'width' => 'w-56',
+    'maxWidth' => null,
+    'width' => null,
+    'align' => 'start',
     'scrollable' => false,
 ])
 
 @php
-    $panelClasses = trim("fixed z-[120] {$width} rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800");
-    $contentClasses = $scrollable ? 'max-h-48 overflow-y-auto' : '';
+    $widthClass = $width ?? $maxWidth ?? ($scrollable ? 'max-w-md' : 'max-w-sm');
+    $panelClasses = trim(implode(' ', array_filter([
+        'fixed z-[120]',
+        $width ? $widthClass : 'w-max min-w-[12rem] '.$widthClass,
+        'rounded-lg border border-gray-200 bg-white p-3 shadow-lg',
+        'dark:border-gray-700 dark:bg-gray-800',
+    ])));
+    $contentClasses = $scrollable ? 'max-h-60 overflow-y-auto pr-1' : '';
 @endphp
 
 <span
@@ -16,11 +24,25 @@
         tooltipOpen: false,
         panelTop: 0,
         panelLeft: 0,
+        align: @js($align),
         scrollHandler: null,
         positionPanel() {
             const rect = this.$refs.trigger.getBoundingClientRect();
+            const panel = this.$refs.panel;
+
             this.panelTop = rect.bottom + 4;
-            this.panelLeft = rect.left;
+
+            if (! panel) {
+                this.panelLeft = rect.left;
+
+                return;
+            }
+
+            const panelWidth = panel.offsetWidth;
+
+            this.panelLeft = this.align === 'end'
+                ? Math.max(8, rect.right - panelWidth)
+                : rect.left;
         },
         toggle() {
             this.tooltipOpen = ! this.tooltipOpen;
@@ -66,6 +88,7 @@
             x-show="tooltipOpen"
             x-cloak
             x-transition
+            x-ref="panel"
             @click.stop
             role="tooltip"
             class="{{ $panelClasses }}"
@@ -73,9 +96,11 @@
         >
             <div @class([$contentClasses => $scrollable])>
                 @if (filled($text))
-                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ $text }}</p>
+                    <p class="text-xs leading-relaxed text-wrap text-gray-600 dark:text-gray-400">{{ $text }}</p>
                 @else
-                    {{ $slot }}
+                    <div class="space-y-2 text-xs leading-relaxed text-wrap text-gray-600 dark:text-gray-400">
+                        {{ $slot }}
+                    </div>
                 @endif
             </div>
         </div>
