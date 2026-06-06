@@ -10,9 +10,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Council role slugs (discussion scope: council)
+    | Council roles (discussion scope: council)
     |--------------------------------------------------------------------------
     */
+    'council_role_resolver' => env('AFTERBURNER_COUNCIL_ROLE_RESOLVER', \App\Support\CouncilRoles::class),
+
     'council_role_slugs' => [
         'president',
         'treasurer',
