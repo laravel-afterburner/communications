@@ -202,7 +202,7 @@
                 <div>
                     <x-label for="edit_thread_scope" value="{{ __('Scope') }}" />
                     <x-select-input id="edit_thread_scope" wire:model.live="editThreadForm.scope" class="mt-1 block w-full">
-                        <option value="team">{{ __('Team (all members)') }}</option>
+                        <option value="team">{{ entity_title() }} (all members)</option>
                         <option value="council">{{ __('Council only') }}</option>
                         @if($this->properties->isNotEmpty())
                             <option value="property">{{ __('Property') }}</option>

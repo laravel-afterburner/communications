@@ -2,6 +2,8 @@
 
 namespace Afterburner\Communications\Enums;
 
+use Afterburner\Support\EntityLabel;
+
 enum DiscussionThreadScope: string
 {
     case Council = 'council';
@@ -12,7 +14,7 @@ enum DiscussionThreadScope: string
     {
         return match ($this) {
             self::Council => 'Council',
-            self::Team => 'Team',
+            self::Team => EntityLabel::singularTitle().' (all members)',
             self::Property => 'Property',
         };
     }

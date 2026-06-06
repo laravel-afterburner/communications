@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Afterburner\Support\EntityLabel;
 use Illuminate\Support\Str;
 
 class TeamAnnouncementMail extends Mailable implements ShouldQueue
@@ -93,6 +94,6 @@ class TeamAnnouncementMail extends Mailable implements ShouldQueue
         $sanitized = trim($sanitized, '_');
         
         // Fallback if empty or invalid
-        return $sanitized ?: Str::snake(config('afterburner.entity_label', 'team'));
+        return $sanitized ?: Str::snake(EntityLabel::singular());
     }
 }

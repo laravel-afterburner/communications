@@ -8,7 +8,7 @@
     <div class="max-w-xs">
         <x-label for="scope" value="{{ __('Scope') }}" />
         <x-select-input id="scope" wire:model.live="scope" class="mt-1 block w-full">
-            <option value="team">{{ __('Team (all members)') }}</option>
+            <option value="team">{{ entity_title() }} (all members)</option>
             <option value="council">{{ __('Council only') }}</option>
             @if($this->properties->isNotEmpty())
                 <option value="property">{{ __('Property') }}</option>

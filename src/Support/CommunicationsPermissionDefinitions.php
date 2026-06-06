@@ -2,6 +2,8 @@
 
 namespace Afterburner\Communications\Support;
 
+use Afterburner\Support\EntityLabel;
+
 final class CommunicationsPermissionDefinitions
 {
     /**
@@ -33,7 +35,7 @@ final class CommunicationsPermissionDefinitions
                 ->all();
         }
 
-        $entity = config('afterburner.entity_label', 'team');
+        $entity = EntityLabel::singular();
 
         return [
             [

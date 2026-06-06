@@ -7,6 +7,7 @@ use Afterburner\Communications\Mail\TeamAnnouncementMail;
 use Afterburner\Communications\Models\TeamAnnouncement;
 use Afterburner\Communications\Support\CommunicationsAuditLogger;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
+use Afterburner\Support\EntityLabel;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
@@ -110,12 +111,12 @@ class AnnouncementManager extends Component
 
         // Ensure user is a member of this team
         if (! Auth::user()->teams->contains($this->team)) {
-            abort(403, 'You are not a member of this '.config('afterburner.entity_label').'.');
+            abort(403, 'You are not a member of this '.EntityLabel::singular().'.');
         }
 
         // Ensure this is the user's current team
         if (Auth::user()->currentTeam->id !== $this->team->id) {
-            abort(403, 'You can only view announcements for your current '.config('afterburner.entity_label').'.');
+            abort(403, 'You can only view announcements for your current '.EntityLabel::singular().'.');
         }
 
         abort_unless(SubscriptionEntitlementGate::allows($this->team), 403);
