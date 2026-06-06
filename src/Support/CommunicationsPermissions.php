@@ -4,6 +4,7 @@ namespace Afterburner\Communications\Support;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamPermissionGate;
 
 /**
  * Communications module areas (announcements vs discussions) mapped to permission slugs.

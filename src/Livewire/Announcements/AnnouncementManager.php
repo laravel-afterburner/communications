@@ -7,7 +7,7 @@ use Afterburner\Communications\Mail\TeamAnnouncementMail;
 use Afterburner\Communications\Models\TeamAnnouncement;
 use Afterburner\Communications\Support\CommunicationsAuditLogger;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
-use Afterburner\Support\EntityLabel;
+use App\Support\EntityLabel;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;

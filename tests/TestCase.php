@@ -5,7 +5,7 @@ namespace Afterburner\Communications\Tests;
 use Afterburner\Communications\Providers\CommunicationsServiceProvider;
 use Afterburner\Communications\Support\CommunicationsPermissionDefinitions;
 use Afterburner\Communications\Support\DiscussionPermissions;
-use Afterburner\Support\Testing\Concerns\ConfiguresAfterburnerEntity;
+use Tests\Concerns\ConfiguresAfterburnerEntity;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

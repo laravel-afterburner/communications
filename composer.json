@@ -1,12 +1,11 @@
 {
     "name": "laravel-afterburner/communications",
     "description": "Team announcements and discussion threads for Afterburner applications",
-    "version": "1.7.5",
+    "version": "1.7.6",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel-afterburner/support": "^1.0",
         "laravel/framework": "^11.0",
         "laravel-afterburner/jetstream": "^1.0|dev-master",
         "livewire/livewire": "^3.5"
@@ -26,9 +25,18 @@
             "Afterburner\\Communications\\Tests\\": "tests/",
             "App\\Models\\": "tests/Fixtures/Models/",
             "App\\Traits\\": "tests/Fixtures/Traits/",
-            "App\\Support\\": "tests/Fixtures/Support/",
-            "App\\Support\\Audit\\": "tests/Fixtures/Support/Audit/"
-        }
+            "App\\Support\\Audit\\": "tests/Fixtures/Support/Audit/",
+            "Tests\\Concerns\\": "tests/Concerns/"
+        },
+        "classmap": [
+            "tests/Fixtures/Support/EntityLabel.php",
+            "tests/Fixtures/Support/TeamPermissionGate.php",
+            "tests/Fixtures/Support/PageHeader.php",
+            "tests/Fixtures/Support/TeamDateTime.php",
+            "tests/Fixtures/Support/Concerns/ChecksOptionalSubscriptionEntitlement.php",
+            "tests/Fixtures/Database/Seeders/Concerns/AssignsPermissionsToTeamOwners.php",
+            "tests/Fixtures/Support/Audit/AuditLogger.php"
+        ]
     },
     "scripts": {
         "test": "phpunit",

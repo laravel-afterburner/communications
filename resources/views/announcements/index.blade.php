@@ -1,4 +1,4 @@
-<x-app-layout :title="\Afterburner\Communications\Support\PageHeader::make(__('Announcements'))">
+<x-app-layout :title="\App\Support\PageHeader::make(__('Announcements'))">
     <x-slot name="header">
         <x-afterburner-communications::page-header :section="__('Announcements')" />
     </x-slot>

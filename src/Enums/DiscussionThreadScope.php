@@ -2,7 +2,7 @@
 
 namespace Afterburner\Communications\Enums;
 
-use Afterburner\Support\EntityLabel;
+use App\Support\EntityLabel;
 
 enum DiscussionThreadScope: string
 {

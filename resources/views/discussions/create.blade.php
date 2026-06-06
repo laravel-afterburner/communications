@@ -1,4 +1,4 @@
-<x-app-layout :title="\Afterburner\Communications\Support\PageHeader::make(__('Discussions'), action: __('New thread'))">
+<x-app-layout :title="\App\Support\PageHeader::make(__('Discussions'), action: __('New thread'))">
     <x-slot name="header">
         <x-afterburner-communications::page-header :section="__('Discussions')" :action="__('New thread')" />
     </x-slot>

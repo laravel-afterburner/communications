@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterburner\Communications\Database\Seeders\Concerns;
+namespace App\Database\Seeders\Concerns;
 
 use Illuminate\Support\Facades\DB;
 
@@ -9,6 +9,10 @@ trait AssignsPermissionsToTeamOwners
     protected function assignPermissionsToTeamOwners(array $insertedPermissionIds, array $permissions, $now): int
     {
         if (! DB::getSchemaBuilder()->hasTable('teams') || ! DB::getSchemaBuilder()->hasTable('roles')) {
+            if (isset($this->command)) {
+                $this->command->warn('  ⚠ Teams or roles table does not exist. Skipping team owner permission assignment.');
+            }
+
             return 0;
         }
 
@@ -21,6 +25,10 @@ trait AssignsPermissionsToTeamOwners
         }
 
         if (! $userRoleTable) {
+            if (isset($this->command)) {
+                $this->command->warn('  ⚠ User-role pivot table not found.');
+            }
+
             return 0;
         }
 
@@ -37,10 +45,22 @@ trait AssignsPermissionsToTeamOwners
         }
 
         if (! $hierarchyField) {
+            if (isset($this->command)) {
+                $this->command->warn('  ⚠ No hierarchy field found in roles table.');
+            }
+
             return 0;
         }
 
-        $teams = DB::table('teams')->whereNotNull('user_id')->select('id', 'user_id')->get();
+        $teams = DB::table('teams')
+            ->whereNotNull('user_id')
+            ->select('id', 'user_id')
+            ->get();
+
+        if ($teams->isEmpty()) {
+            return 0;
+        }
+
         $assignedCount = 0;
         $hasTimestamps = in_array('created_at', $rolePermissionColumns, true)
             && in_array('updated_at', $rolePermissionColumns, true);
@@ -71,7 +91,10 @@ trait AssignsPermissionsToTeamOwners
 
             if (in_array('role_slug', $rolePermissionColumns, true) && in_array('permission_id', $rolePermissionColumns, true)) {
                 foreach ($insertedPermissionIds as $permissionId) {
-                    $data = ['role_slug' => $highestRole->slug, 'permission_id' => $permissionId];
+                    $data = [
+                        'role_slug' => $highestRole->slug,
+                        'permission_id' => $permissionId,
+                    ];
                     if ($hasTimestamps) {
                         $data['created_at'] = $now;
                         $data['updated_at'] = $now;
@@ -81,7 +104,10 @@ trait AssignsPermissionsToTeamOwners
                 $assignedCount++;
             } elseif (in_array('role_slug', $rolePermissionColumns, true) && in_array('permission_slug', $rolePermissionColumns, true)) {
                 foreach ($permissions as $permission) {
-                    $data = ['role_slug' => $highestRole->slug, 'permission_slug' => $permission['slug']];
+                    $data = [
+                        'role_slug' => $highestRole->slug,
+                        'permission_slug' => $permission['slug'],
+                    ];
                     if ($hasTimestamps) {
                         $data['created_at'] = $now;
                         $data['updated_at'] = $now;
@@ -91,7 +117,10 @@ trait AssignsPermissionsToTeamOwners
                 $assignedCount++;
             } elseif (in_array('role_id', $rolePermissionColumns, true) && in_array('permission_id', $rolePermissionColumns, true)) {
                 foreach ($insertedPermissionIds as $permissionId) {
-                    $data = ['role_id' => $highestRole->id, 'permission_id' => $permissionId];
+                    $data = [
+                        'role_id' => $highestRole->id,
+                        'permission_id' => $permissionId,
+                    ];
                     if ($hasTimestamps) {
                         $data['created_at'] = $now;
                         $data['updated_at'] = $now;

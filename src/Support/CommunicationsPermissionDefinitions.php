@@ -2,7 +2,7 @@
 
 namespace Afterburner\Communications\Support;
 
-use Afterburner\Support\EntityLabel;
+use App\Support\EntityLabel;
 
 final class CommunicationsPermissionDefinitions
 {

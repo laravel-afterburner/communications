@@ -3,6 +3,7 @@
 namespace Afterburner\Communications\Support;
 
 use App\Models\User;
+use App\Support\TeamPermissionGate;
 
 final class DiscussionPermissions
 {
