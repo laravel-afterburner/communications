@@ -11,23 +11,23 @@
         </div>
 
         @if ($canCreate)
-            <x-button href="{{ route('teams.discussions.create', ['team' => $team]) }}" wire:navigate>
+            <x-button href="{{ route('teams.discussions.create', ['team' => $team]) }}" wire:navigate class="shrink-0 self-end sm:self-auto">
                 {{ __('New thread') }}
             </x-button>
         @endif
     </div>
 
-    <div class="overflow-x-auto bg-white shadow sm:rounded-lg dark:bg-gray-800">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+    <div class="bg-white shadow sm:rounded-lg dark:bg-gray-800">
+        <x-responsive-table :bleed="false">
             <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         {{ __('Thread Topic') }}
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <th scope="col" class="table-cell-md text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         {{ __('Scope') }}
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <th scope="col" class="table-cell-lg text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         {{ __('Last reply') }}
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -50,7 +50,7 @@
                                 {{ $thread->title }}
                             </a>
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td class="table-cell-md whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             @if($thread->scope->value === 'property' && \Afterburner\Communications\Models\DiscussionThread::propertyModelClass())
                                 @php($propertyLabels = $thread->propertyLotLabels())
                                 <span class="inline-flex items-center gap-1.5">
@@ -74,7 +74,7 @@
                                 {{ $thread->scope->label() }}
                             @endif
                         </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td class="table-cell-lg whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             {{ $thread->latestReplyAuthorName() ?? '—' }} - {!! format_date_superscript($thread->updated_at, 'datetime') !!}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm">
@@ -109,7 +109,7 @@
                     </tr>
                 @endforelse
             </tbody>
-        </table>
+        </x-responsive-table>
     </div>
 
     <div class="mt-6">
@@ -122,20 +122,20 @@
                 {{ __('Matching posts') }}
             </h2>
 
-            <div class="overflow-x-auto bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <div class="bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                <x-responsive-table :bleed="false">
                     <thead class="bg-gray-50 dark:bg-gray-900">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {{ __('Post') }}
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            <th scope="col" class="table-cell-md text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {{ __('In thread') }}
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            <th scope="col" class="table-cell-lg text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {{ __('Author') }}
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            <th scope="col" class="table-cell-lg text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {{ __('Posted') }}
                             </th>
                             <th scope="col" class="relative px-6 py-3">
@@ -155,7 +155,7 @@
                                         {{ trim(Str::limit($post->body, 120)) }}
                                     </a>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <td class="table-cell-md whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                     <a
                                         href="{{ route('teams.discussions.show', ['team' => $team, 'thread' => $post->thread]) }}"
                                         wire:navigate
@@ -164,10 +164,10 @@
                                         {{ $post->thread->title }}
                                     </a>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                <td class="table-cell-lg whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                                     {{ $post->user?->name ?? '—' }}
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                <td class="table-cell-lg whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                                     {!! format_date_superscript($post->created_at, 'datetime') !!}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
@@ -187,7 +187,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-responsive-table>
             </div>
 
             <div class="mt-6">

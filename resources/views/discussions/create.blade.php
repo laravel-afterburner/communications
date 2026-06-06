@@ -4,7 +4,7 @@
     </x-slot>
 
     <div>
-        <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
             @livewire('discussions.create', ['team' => $team])
         </div>
     </div>
