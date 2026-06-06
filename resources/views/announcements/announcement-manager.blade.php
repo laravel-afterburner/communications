@@ -53,6 +53,9 @@
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-2">
+                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                {{ $announcement->title }}
+                                            </h4>
                                             @if($this->canCreateAnnouncements())
                                                 @if($announcement->isPublished())
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
@@ -63,14 +66,11 @@
                                                         Scheduled
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
                                                         Draft
                                                     </span>
                                                 @endif
                                             @endif
-                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                {{ $announcement->title }}
-                                            </h4>
                                         </div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap mb-3">{{ trim($announcement->message) }}</div>
                                         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
