@@ -36,6 +36,40 @@ class DiscussionManagementTest extends TestCase
 
         $this->assertNotNull($reply);
         $this->assertSame('This is my quoted reply.', $reply->body);
+        $this->assertSame($originalPost->body, $reply->quoted_post_body);
+        $this->assertSame($user->name, $reply->quoted_post_author_name);
+        $this->assertTrue($originalPost->created_at->equalTo($reply->quoted_post_created_at));
+    }
+
+    public function test_quoted_post_snapshot_persists_after_original_post_is_deleted(): void
+    {
+        [$user, $team] = $this->createTeamWithUser(['manage_discussions']);
+        $thread = $this->createDiscussionThread($team, $user);
+        $originalPost = $thread->posts()->first();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['team' => $team, 'thread' => $thread])
+            ->call('quotePost', $originalPost->id)
+            ->set('replyBody', 'Reply with quote.')
+            ->call('postReply');
+
+        $reply = DiscussionPost::query()
+            ->where('thread_id', $thread->id)
+            ->where('body', 'Reply with quote.')
+            ->firstOrFail();
+
+        $originalPost->delete();
+        $reply->refresh()->unsetRelation('quotedPost');
+
+        $this->assertSame('Opening post body', $reply->quoted_post_body);
+        $this->assertSame($user->name, $reply->quoted_post_author_name);
+        $this->assertNotNull($reply->quoted_post_created_at);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['team' => $team, 'thread' => $thread->fresh()])
+            ->assertSee('Quoting '.$user->name)
+            ->assertSee('Opening post body')
+            ->assertSee($reply->quoted_post_created_at->format('Y-m-d H:i'));
     }
 
     public function test_moderator_can_archive_and_restore_thread(): void

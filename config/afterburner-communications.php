@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Property;
+use App\Support\CouncilRoles;
+
 return [
 
     'enabled' => true,
@@ -13,7 +16,7 @@ return [
     | Council roles (discussion scope: council)
     |--------------------------------------------------------------------------
     */
-    'council_role_resolver' => env('AFTERBURNER_COUNCIL_ROLE_RESOLVER', \App\Support\CouncilRoles::class),
+    'council_role_resolver' => env('AFTERBURNER_COUNCIL_ROLE_RESOLVER', CouncilRoles::class),
 
     'council_role_slugs' => [
         'president',
@@ -22,7 +25,7 @@ return [
         'council_member',
     ],
 
-    'property_model' => \App\Models\Property::class,
+    'property_model' => Property::class,
 
     'audit' => [
         'skip_routes' => [

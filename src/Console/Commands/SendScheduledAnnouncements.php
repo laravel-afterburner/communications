@@ -45,6 +45,7 @@ class SendScheduledAnnouncements extends Command
 
         if ($announcements->isEmpty()) {
             $this->info('No scheduled announcements found.');
+
             return 0;
         }
 
@@ -87,12 +88,13 @@ class SendScheduledAnnouncements extends Command
             }
 
             $this->info("Sent {$sentCount} email(s) for announcement: {$announcement->title}");
-            
+
             // Mark emails as sent to prevent duplicate sends
             $announcement->update(['emails_sent_at' => now()]);
         }
 
         $this->info('Done!');
+
         return 0;
     }
 }

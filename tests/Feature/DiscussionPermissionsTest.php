@@ -50,15 +50,15 @@ class DiscussionPermissionsTest extends TestCase
         $this->assertFalse($member->can('delete', $post));
     }
 
-    public function test_moderator_can_edit_other_members_posts_with_permission(): void
+    public function test_moderator_cannot_edit_other_members_posts(): void
     {
         [$author, $team] = $this->createTeamWithUser();
         $moderator = $this->createAdditionalUser($team, [DiscussionPermissions::MODERATE_POSTS], 'moderator@example.com');
         $thread = $this->createDiscussionThread($team, $author);
         $post = $thread->posts()->first();
 
-        $this->assertTrue($moderator->can('update', $post));
-        $this->assertTrue($moderator->can('delete', $post));
+        $this->assertFalse($moderator->can('update', $post));
+        $this->assertFalse($moderator->can('delete', $post));
     }
 
     public function test_legacy_manage_discussions_permission_still_grants_full_access(): void
@@ -72,7 +72,8 @@ class DiscussionPermissionsTest extends TestCase
         $this->assertTrue($legacyModerator->can('archive', $thread));
         $this->assertTrue($legacyModerator->can('lock', $thread));
         $this->assertTrue($legacyModerator->can('delete', $thread));
-        $this->assertTrue($legacyModerator->can('update', $post));
+        $this->assertFalse($legacyModerator->can('update', $post));
+        $this->assertFalse($legacyModerator->can('delete', $post));
     }
 
     public function test_member_with_create_permission_can_start_threads(): void

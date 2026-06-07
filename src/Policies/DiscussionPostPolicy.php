@@ -3,7 +3,6 @@
 namespace Afterburner\Communications\Policies;
 
 use Afterburner\Communications\Models\DiscussionPost;
-use Afterburner\Communications\Support\DiscussionPermissions;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -22,13 +21,35 @@ class DiscussionPostPolicy
             return false;
         }
 
-        return (int) $post->user_id === (int) $user->id
-            || DiscussionPermissions::canModeratePosts($user, $post->thread->team_id);
+        return (int) $post->user_id === (int) $user->id;
     }
 
     public function delete(User $user, DiscussionPost $post): bool
     {
         return $this->update($user, $post);
+    }
+
+    public function react(User $user, DiscussionPost $post): bool
+    {
+        if (! $this->belongsToPostTeam($user, $post)) {
+            return false;
+        }
+
+        if (! SubscriptionEntitlementGate::allows($post->thread->team)) {
+            return false;
+        }
+
+        $thread = $post->thread;
+
+        if ($thread->isLocked() || $thread->isArchived()) {
+            return false;
+        }
+
+        if (! app(DiscussionThreadPolicy::class)->view($user, $thread)) {
+            return false;
+        }
+
+        return (int) $post->user_id !== (int) $user->id;
     }
 
     protected function belongsToPostTeam(User $user, DiscussionPost $post): bool

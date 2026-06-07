@@ -2,8 +2,10 @@
 
 namespace Afterburner\Communications\Livewire\Discussions;
 
+use Afterburner\Communications\Enums\DiscussionPostReactionType;
 use Afterburner\Communications\Enums\DiscussionThreadScope;
 use Afterburner\Communications\Models\DiscussionPost;
+use Afterburner\Communications\Models\DiscussionPostReaction;
 use Afterburner\Communications\Models\DiscussionThread;
 use Afterburner\Communications\Support\CommunicationsAuditLogger;
 use Afterburner\Communications\Support\DiscussionMentionables;
@@ -85,6 +87,44 @@ class Show extends Component
         $this->quotedPostId = null;
     }
 
+    public function toggleReaction(int $postId, string $type): void
+    {
+        $reactionType = DiscussionPostReactionType::from($type);
+
+        $post = DiscussionPost::query()
+            ->where('thread_id', $this->thread->id)
+            ->with('thread')
+            ->findOrFail($postId);
+
+        abort_unless(Auth::user()->can('react', $post), 403);
+
+        $existing = DiscussionPostReaction::query()
+            ->where('discussion_post_id', $post->id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        $actor = Auth::user();
+
+        if ($existing === null) {
+            DiscussionPostReaction::query()->create([
+                'discussion_post_id' => $post->id,
+                'user_id' => $actor->id,
+                'type' => $reactionType,
+            ]);
+
+            CommunicationsAuditLogger::postReactionAdded($post, $this->thread, $actor, $reactionType);
+        } elseif ($existing->type === $reactionType) {
+            $existing->delete();
+
+            CommunicationsAuditLogger::postReactionRemoved($post, $this->thread, $actor, $reactionType);
+        } else {
+            $previousType = $existing->type;
+            $existing->update(['type' => $reactionType]);
+
+            CommunicationsAuditLogger::postReactionChanged($post, $this->thread, $actor, $previousType, $reactionType);
+        }
+    }
+
     public function postReply(): void
     {
         abort_unless(Auth::user()->can('post', $this->thread), 403);
@@ -94,21 +134,25 @@ class Show extends Component
             'quotedPostId' => ['nullable', 'integer'],
         ]);
 
+        $quotedPost = null;
+
         if ($this->quotedPostId !== null) {
-            abort_unless(
-                DiscussionPost::query()
-                    ->where('thread_id', $this->thread->id)
-                    ->whereKey($this->quotedPostId)
-                    ->exists(),
-                422
-            );
+            $quotedPost = DiscussionPost::query()
+                ->where('thread_id', $this->thread->id)
+                ->with('user')
+                ->find($this->quotedPostId);
+
+            abort_unless($quotedPost !== null, 422);
         }
 
         $post = DiscussionPost::query()->create([
             'thread_id' => $this->thread->id,
             'user_id' => Auth::id(),
             'body' => $this->replyBody,
-            'quoted_post_id' => $this->quotedPostId,
+            'quoted_post_id' => $quotedPost?->id,
+            'quoted_post_body' => $quotedPost?->body,
+            'quoted_post_author_name' => $quotedPost?->user->name,
+            'quoted_post_created_at' => $quotedPost?->created_at,
         ]);
 
         $notificationService = app(DiscussionNotificationService::class);
@@ -451,7 +495,7 @@ class Show extends Component
     {
         $posts = DiscussionPost::query()
             ->where('thread_id', $this->thread->id)
-            ->with(['user', 'quotedPost.user', 'quotedPost.mentions', 'mentions'])
+            ->with(['user', 'quotedPost.user', 'quotedPost.mentions', 'mentions', 'reactions.user'])
             ->orderBy('created_at')
             ->paginate(10, pageName: 'postsPage');
 

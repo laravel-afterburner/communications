@@ -3,11 +3,11 @@
 namespace Afterburner\Communications\Database\Seeders;
 
 use Afterburner\Communications\Database\Seeders\Concerns\AssignsPermissionsToRoles;
-use App\Database\Seeders\Concerns\AssignsPermissionsToTeamOwners;
 use Afterburner\Communications\Database\Seeders\Concerns\MigratesLegacyManageDiscussions;
 use Afterburner\Communications\Support\CommunicationsPermissionDefinitions;
 use Afterburner\Communications\Support\CommunicationsRolePermissions;
 use Afterburner\Communications\Support\DiscussionPermissions;
+use App\Database\Seeders\Concerns\AssignsPermissionsToTeamOwners;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

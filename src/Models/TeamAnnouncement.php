@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 class TeamAnnouncement extends Model
 {
@@ -94,7 +95,7 @@ class TeamAnnouncement extends Model
      */
     public function markAsReadBy(User $user): void
     {
-        if (!$this->hasBeenReadBy($user)) {
+        if (! $this->hasBeenReadBy($user)) {
             $this->readers()->attach($user->id, [
                 'read_at' => now(),
             ]);
@@ -117,7 +118,7 @@ class TeamAnnouncement extends Model
     {
         return $query->where(function ($q) use ($roleSlugs) {
             $q->whereNull('target_roles')
-              ->orWhereJsonContains('target_roles', $roleSlugs);
+                ->orWhereJsonContains('target_roles', $roleSlugs);
         });
     }
 
@@ -126,7 +127,7 @@ class TeamAnnouncement extends Model
      */
     public static function getUnreadForUser(User $user): \Illuminate\Database\Eloquent\Collection
     {
-        if (!$user->currentTeam) {
+        if (! $user->currentTeam) {
             return collect();
         }
 
@@ -142,13 +143,13 @@ class TeamAnnouncement extends Model
             })
             ->where(function ($query) use ($userRoleSlugs) {
                 $query->whereNull('target_roles')
-                      ->orWhere(function ($q) use ($userRoleSlugs) {
-                          if (!empty($userRoleSlugs)) {
-                              foreach ($userRoleSlugs as $roleSlug) {
-                                  $q->orWhereJsonContains('target_roles', $roleSlug);
-                              }
-                          }
-                      });
+                    ->orWhere(function ($q) use ($userRoleSlugs) {
+                        if (! empty($userRoleSlugs)) {
+                            foreach ($userRoleSlugs as $roleSlug) {
+                                $q->orWhereJsonContains('target_roles', $roleSlug);
+                            }
+                        }
+                    });
             })
             ->orderBy('published_at', 'desc')
             ->get();
@@ -164,8 +165,6 @@ class TeamAnnouncement extends Model
 
     /**
      * Get the count of users who have read this announcement.
-     *
-     * @return int
      */
     public function getReadCount(): int
     {
@@ -174,58 +173,56 @@ class TeamAnnouncement extends Model
 
     /**
      * Get the count of eligible users who should see this announcement.
-     *
-     * @return int
      */
     public function getEligibleUsersCount(): int
     {
         $allUsers = $this->team->allUsers();
-        
+
         // If no target roles specified, all team users are eligible
         if ($this->target_roles === null || empty($this->target_roles)) {
             return $allUsers->count();
         }
-        
+
         // Filter users who have at least one of the target roles
         return $allUsers->filter(function ($user) {
             $userRoleSlugs = $user->roles()
                 ->where('team_id', $this->team->id)
                 ->pluck('slug')
                 ->toArray();
-            
-            return !empty(array_intersect($this->target_roles, $userRoleSlugs));
+
+            return ! empty(array_intersect($this->target_roles, $userRoleSlugs));
         })->count();
     }
 
     /**
      * Get the eligible users who should see this announcement.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getEligibleUsers()
     {
         $allUsers = $this->team->allUsers();
-        
+
         // If no target roles specified, all team users are eligible
         if ($this->target_roles === null || empty($this->target_roles)) {
             return $allUsers;
         }
-        
+
         // Filter users who have at least one of the target roles
         return $allUsers->filter(function ($user) {
             $userRoleSlugs = $user->roles()
                 ->where('team_id', $this->team->id)
                 ->pluck('slug')
                 ->toArray();
-            
-            return !empty(array_intersect($this->target_roles, $userRoleSlugs));
+
+            return ! empty(array_intersect($this->target_roles, $userRoleSlugs));
         });
     }
 
     /**
      * Get users who have read this announcement.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getReaders()
     {
@@ -235,13 +232,13 @@ class TeamAnnouncement extends Model
     /**
      * Get users who haven't read this announcement.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getNonReaders()
     {
         $eligibleUsers = $this->getEligibleUsers();
         $readerIds = $this->readers->pluck('id')->toArray();
-        
+
         return $eligibleUsers->reject(function ($user) use ($readerIds) {
             return in_array($user->id, $readerIds);
         });

@@ -2,6 +2,7 @@
 
 namespace Afterburner\Communications\Support;
 
+use Afterburner\Communications\Enums\DiscussionPostReactionType;
 use Afterburner\Communications\Models\DiscussionPost;
 use Afterburner\Communications\Models\DiscussionThread;
 use Afterburner\Communications\Models\TeamAnnouncement;
@@ -185,6 +186,62 @@ class CommunicationsAuditLogger
         );
     }
 
+    public static function postReactionAdded(
+        DiscussionPost $post,
+        DiscussionThread $thread,
+        User $actor,
+        DiscussionPostReactionType $type,
+    ): void {
+        self::logPostReaction(
+            post: $post,
+            thread: $thread,
+            actor: $actor,
+            eventName: 'discussion.post.reaction.added',
+            summary: "{$actor->name} reacted with {$type->label()} to a post in \"{$thread->title}\".",
+            reactionType: $type,
+        );
+    }
+
+    public static function postReactionRemoved(
+        DiscussionPost $post,
+        DiscussionThread $thread,
+        User $actor,
+        DiscussionPostReactionType $type,
+    ): void {
+        self::logPostReaction(
+            post: $post,
+            thread: $thread,
+            actor: $actor,
+            eventName: 'discussion.post.reaction.removed',
+            summary: "{$actor->name} removed their {$type->label()} from a post in \"{$thread->title}\".",
+            reactionType: $type,
+        );
+    }
+
+    public static function postReactionChanged(
+        DiscussionPost $post,
+        DiscussionThread $thread,
+        User $actor,
+        DiscussionPostReactionType $from,
+        DiscussionPostReactionType $to,
+    ): void {
+        AuditLogger::log(
+            category: self::CATEGORY_DISCUSSION,
+            eventName: 'discussion.post.reaction.changed',
+            auditable: $post,
+            changes: AuditLogger::changesWithSummary(
+                summary: "{$actor->name} changed their reaction from {$from->label()} to {$to->label()} on a post in \"{$thread->title}\".",
+                fieldChanges: [
+                    'reaction' => ['before' => $from->value, 'after' => $to->value],
+                ],
+                context: self::postReactionContext($post, $thread, $to),
+            ),
+            metadata: ['actor_user_id' => $actor->id],
+            teamId: $thread->team_id,
+            actionType: 'livewire',
+        );
+    }
+
     public static function announcementCreated(TeamAnnouncement $announcement, User $actor): void
     {
         AuditLogger::log(
@@ -246,6 +303,45 @@ class CommunicationsAuditLogger
             teamId: $announcement->team_id,
             actionType: 'livewire',
         );
+    }
+
+    protected static function logPostReaction(
+        DiscussionPost $post,
+        DiscussionThread $thread,
+        User $actor,
+        string $eventName,
+        string $summary,
+        DiscussionPostReactionType $reactionType,
+    ): void {
+        AuditLogger::log(
+            category: self::CATEGORY_DISCUSSION,
+            eventName: $eventName,
+            auditable: $post,
+            changes: AuditLogger::changesWithSummary(
+                summary: $summary,
+                context: self::postReactionContext($post, $thread, $reactionType),
+            ),
+            metadata: ['actor_user_id' => $actor->id],
+            teamId: $thread->team_id,
+            actionType: 'livewire',
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected static function postReactionContext(
+        DiscussionPost $post,
+        DiscussionThread $thread,
+        DiscussionPostReactionType $reactionType,
+    ): array {
+        return [
+            'thread_id' => $thread->id,
+            'thread_title' => $thread->title,
+            'post_id' => $post->id,
+            'reaction_type' => $reactionType->value,
+            'post_author_user_id' => $post->user_id,
+        ];
     }
 
     protected static function excerpt(string $body, int $length = 200): string

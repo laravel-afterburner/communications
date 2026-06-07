@@ -4,9 +4,9 @@ namespace Afterburner\Communications\Policies;
 
 use Afterburner\Communications\Models\TeamAnnouncement;
 use Afterburner\Communications\Support\SubscriptionEntitlementGate;
-use App\Support\TeamPermissionGate;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamPermissionGate;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TeamAnnouncementPolicy

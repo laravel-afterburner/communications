@@ -13,11 +13,11 @@ final class SubscriptionEntitlementGate
 
     public static function allows(Model $team): bool
     {
-        return static::allowsSubscriptionFeature($team, static::FEATURE_SLUG);
+        return self::allowsSubscriptionFeature($team, self::FEATURE_SLUG);
     }
 
     public static function withinLimit(Model $team, string $key, int $current): bool
     {
-        return static::withinSubscriptionLimit($team, static::FEATURE_SLUG, $key, $current);
+        return self::withinSubscriptionLimit($team, self::FEATURE_SLUG, $key, $current);
     }
 }

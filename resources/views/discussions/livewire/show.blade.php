@@ -110,26 +110,27 @@
                 </div>
 
                 <div class="rounded-lg border bg-gray-50 p-3 dark:bg-gray-900/50">
-                    @if($post->quotedPost)
-                        <div class="mb-2 flex flex-col gap-0 border-l-4 border-indigo-400 bg-indigo-50 py-1.5 pl-2 pr-2 text-sm dark:border-indigo-600 dark:bg-indigo-950/40">
-                            <p class="font-medium leading-tight text-indigo-900 dark:text-indigo-200">
-                                {{ __('Quoting :name', ['name' => $post->quotedPost->user->name]) }}
-                            </p>
-                            <p class="line-clamp-4 whitespace-pre-line leading-tight italic text-indigo-700 dark:text-indigo-300">
-                                &ldquo;{{ trim(Str::limit($post->quotedPost->body, 300)) }}&rdquo;
-                            </p>
-                        </div>
+                    @if($post->hasQuote())
+                        <x-afterburner-communications::quoted-post
+                            :author-name="$post->quoteAuthorName()"
+                            :body="$post->quoteBody()"
+                            :created-at="$post->quoteCreatedAt()"
+                        />
                     @endif
 
                     <div class="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">{!! \Afterburner\Communications\Support\DiscussionMentionFormatter::format($post->body, $post->mentions) !!}</div>
                 </div>
                         
-                <div class="text-xs mt-1 mr-2 text-right">
-                    {!! format_date_superscript($post->created_at, 'datetime') !!}
-                    
-                    @if($post->edited_at)
-                        <span class="ml-1 text-xs italic">({{ __('edited') }})</span>
-                    @endif
+                <div class="mt-1 flex items-center justify-between gap-3 text-xs">
+                    <x-afterburner-communications::post-reactions :post="$post" />
+
+                    <div class="shrink-0 text-right text-gray-500 dark:text-gray-400">
+                        {!! format_date_superscript($post->created_at, 'datetime') !!}
+
+                        @if($post->edited_at)
+                            <span class="ml-1 italic">({{ __('edited') }})</span>
+                        @endif
+                    </div>
                 </div>
 
             </div>
@@ -145,13 +146,14 @@
             @if($this->quotedPost)
                 <div class="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/30">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="flex min-w-0 flex-1 flex-col gap-0 text-sm">
-                            <p class="font-medium leading-tight text-indigo-900 dark:text-indigo-200">
-                                {{ __('Quoting :name', ['name' => $this->quotedPost->user->name]) }}
-                            </p>
-                            <p class="line-clamp-3 whitespace-pre-line leading-tight italic text-indigo-700 dark:text-indigo-300">
-                                &ldquo;{{ trim(Str::limit($this->quotedPost->body, 200)) }}&rdquo;
-                            </p>
+                        <div class="min-w-0 flex-1">
+                            <x-afterburner-communications::quoted-post
+                                class="!mb-0"
+                                :author-name="$this->quotedPost->user->name"
+                                :body="$this->quotedPost->body"
+                                :created-at="$this->quotedPost->created_at"
+                                :body-limit="200"
+                            />
                         </div>
                         <button type="button" wire:click="cancelQuote" class="shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
                             <span class="sr-only">{{ __('Remove quote') }}</span>

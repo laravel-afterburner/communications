@@ -2,6 +2,8 @@
 
 namespace Afterburner\Communications\Support;
 
+use App\Support\PermissionGroups;
+
 final class CommunicationsPermissionGroups
 {
     /**
@@ -9,8 +11,8 @@ final class CommunicationsPermissionGroups
      */
     public static function definitions(): array
     {
-        if (class_exists(\App\Support\PermissionGroups::class)) {
-            return collect(\App\Support\PermissionGroups::definitions())
+        if (class_exists(PermissionGroups::class)) {
+            return collect(PermissionGroups::definitions())
                 ->only(['Communications'])
                 ->all();
         }

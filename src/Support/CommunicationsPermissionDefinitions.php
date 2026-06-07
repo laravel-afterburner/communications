@@ -3,6 +3,7 @@
 namespace Afterburner\Communications\Support;
 
 use App\Support\EntityLabel;
+use App\Support\PermissionCatalog;
 
 final class CommunicationsPermissionDefinitions
 {
@@ -28,8 +29,8 @@ final class CommunicationsPermissionDefinitions
      */
     public static function all(): array
     {
-        if (class_exists(\App\Support\PermissionCatalog::class)) {
-            return collect(\App\Support\PermissionCatalog::definitions())
+        if (class_exists(PermissionCatalog::class)) {
+            return collect(PermissionCatalog::definitions())
                 ->filter(fn (array $permission) => in_array($permission['slug'], self::slugs(), true))
                 ->values()
                 ->all();

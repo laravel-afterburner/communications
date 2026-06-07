@@ -21,6 +21,7 @@ use Afterburner\Communications\Support\CommunicationsPermissionGroups;
 use Afterburner\Communications\Support\CommunicationsPermissions;
 use Afterburner\Communications\Support\DiscussionNotificationService;
 use Afterburner\Playbook\Support\Playbook;
+use Afterburner\Subscriptions\Support\SubscriptionPackageFeatures;
 use App\Models\Team;
 use App\Support\Audit\AuditCategories;
 use App\Support\DashboardSections;
@@ -252,11 +253,11 @@ class CommunicationsServiceProvider extends ServiceProvider
 
     protected function registerSubscriptionPackageFeatures(): void
     {
-        if (! class_exists(\Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::class)) {
+        if (! class_exists(SubscriptionPackageFeatures::class)) {
             return;
         }
 
-        \Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::register('communications', 'Communications', [
+        SubscriptionPackageFeatures::register('communications', 'Communications', [
             'Announcements',
             'Discussions',
         ]);

@@ -16,7 +16,7 @@ final class EntityLabel
 
     public static function singularTitle(): string
     {
-        return Str::title(static::singular());
+        return Str::title(self::singular());
     }
 
     /**
@@ -30,12 +30,12 @@ final class EntityLabel
             return Str::title($slug);
         }
 
-        return Str::title(Str::plural(static::singular()));
+        return Str::title(Str::plural(self::singular()));
     }
 
     public static function plural(): string
     {
-        return Str::lower(static::pluralTitle());
+        return Str::lower(self::pluralTitle());
     }
 
     /**
@@ -49,6 +49,6 @@ final class EntityLabel
             return $slug;
         }
 
-        return Str::lower(Str::plural(static::singular()));
+        return Str::lower(Str::plural(self::singular()));
     }
 }

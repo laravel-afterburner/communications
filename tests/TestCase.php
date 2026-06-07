@@ -5,7 +5,6 @@ namespace Afterburner\Communications\Tests;
 use Afterburner\Communications\Providers\CommunicationsServiceProvider;
 use Afterburner\Communications\Support\CommunicationsPermissionDefinitions;
 use Afterburner\Communications\Support\DiscussionPermissions;
-use Tests\Concerns\ConfiguresAfterburnerEntity;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,6 +12,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Tests\Concerns\ConfiguresAfterburnerEntity;
 
 abstract class TestCase extends BaseTestCase
 {
