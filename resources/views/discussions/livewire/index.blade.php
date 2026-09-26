@@ -92,7 +92,12 @@
                             <div class="flex items-center justify-end space-x-2">
                                 <x-action-icon type="view" href="{{ route('teams.discussions.show', ['team' => $team, 'thread' => $thread]) }}" wire:navigate title="{{ __('View thread') }}" />
                                 @if($thread->isLocked())
-                                    <x-action-icon type="lock" title="{{ __('Locked') }}" />
+                                    <x-afterburner-communications::thread-action-icon
+                                        type="lock"
+                                        disabled
+                                        class="pointer-events-none"
+                                        title="{{ __('Locked') }}"
+                                    />
                                 @endif
                             </div>
                         </td>

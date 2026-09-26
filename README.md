@@ -27,17 +27,28 @@ php artisan afterburner:communications:install
 
 The install command will:
 
-- Publish config and views
+- Publish config
 - Add communications environment variables to `.env` and `.env.example` when present
 - Optionally run migrations and seed permissions
+
+Views render from the package. Publish them only when you intend to customize the markup. Published views override the package and go stale:
+
+```bash
+php artisan afterburner:communications:install --views
+```
 
 ### Manual Install
 
 ```bash
 php artisan vendor:publish --tag=afterburner-communications-config
-php artisan vendor:publish --tag=afterburner-communications-assets
 php artisan migrate
 php artisan db:seed --class="Afterburner\\Communications\\Database\\Seeders\\CommunicationsPermissionsSeeder"
+```
+
+To customize views:
+
+```bash
+php artisan vendor:publish --tag=afterburner-communications-assets
 ```
 
 If you use `migrate:fresh --seed`, register `CommunicationsPermissionsSeeder` with your app's `PackageSeederRegistry` (or call it from `DatabaseSeeder`) so discussion permissions are assigned beyond the default role templates.

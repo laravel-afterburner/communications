@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'afterburner:communications:install';
+    protected $signature = 'afterburner:communications:install {--views : Publish package views into the host app for customization}';
 
     protected $description = 'Install the Afterburner Communications package';
 
@@ -20,10 +20,14 @@ class InstallCommand extends Command
             '--force' => true,
         ]);
 
-        $this->call('vendor:publish', [
-            '--tag' => 'afterburner-communications-assets',
-            '--force' => true,
-        ]);
+        if ($this->option('views')) {
+            $this->warn('Published views override the package and will not pick up later package updates.');
+
+            $this->call('vendor:publish', [
+                '--tag' => 'afterburner-communications-assets',
+                '--force' => true,
+            ]);
+        }
 
         if ($this->confirm('Run migrations now?', true)) {
             $this->call('migrate');
